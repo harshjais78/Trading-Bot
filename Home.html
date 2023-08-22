@@ -4,38 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DCX API</title>
-    <!-- <script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js">
-</script> -->
   </head>
   <body>
     <div id="jsoneditor"></div>
     
     <script>
-
-      var baseUrl = "localhost/8080";
       var container = document.getElementById('jsoneditor');
-  //     (function(){
-  //     emailjs.init("C1wF5QXy4IUHVBrql");
-  //  })();
 
-//    var templateParams = {
-//     to_name: 'harshjaiswal9450@gmail.com',
-//     from_name: 'abc',
-//     name: 'James',
-//     notes: 'Check this out!',
-//     message: "this is message param",
-//     from_name: 'HHHarsh J'
-// };
- 
-// emailjs.send('Coindcx alert', 'template_feb333c', templateParams)
-//     .then(function(response) {
-//        console.log('SUCCESS!', response.status, response.text);
-//     }, function(error) {
-//        console.log('FAILED...', error);
-//     });
-
- 
 
       fetch("/check")
         .then((response) =>{
@@ -53,9 +28,7 @@
         });
 
       function showData(data) {
-        // Initialize JSON editor
-        data = JSON.stringify(data);
-        console.log(data);
+        data=JSON.stringify(data,null,3);
         container.append(data);
       }
 

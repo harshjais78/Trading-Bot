@@ -1,0 +1,30 @@
+{
+  "coin": [
+    {
+      "name": "I-SHIB_INR",
+      "precision": 0
+    },
+    {
+      "name": "I-MATIC_INR",
+      "precision": 2
+    },
+    {
+      "name": "I-SOL_INR",
+      "precision": 3
+    },
+    {
+      "name": "I-LRC_INR",
+      "precision": 2
+    },
+    {
+      "name": "I-XRP_INR",
+      "precision": 0
+    }
+  ],
+  "order_id": {
+    "sell": [
+      "9682262005"
+    ],
+    "buy": []
+  }
+}
