@@ -17,7 +17,7 @@ app.use(cors());
 
 app.get('/',  (req, res) => {
     let homePath=path.join(__dirname,'home.html');
-    res.send('homePath');
+    res.send(homePath);
 });
 
 
