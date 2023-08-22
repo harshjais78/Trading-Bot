@@ -15,9 +15,9 @@ let port=process.env.PORT || 8080;
 
 app.use(cors());
 
-app.get('/', async (req, res) => {
+app.get('/',  (req, res) => {
     let homePath=path.join(__dirname,'home.html');
-    res.sendFile(homePath);
+    res.send('homePath');
 });
 
 
