@@ -15,9 +15,10 @@ let port=process.env.PORT || 8080;
 
 app.use(cors());
 
-app.get('/',  (req, res) => {
-    let homePath=path.join(__dirname,'home.html');
-    res.sendFile(homePath);
+app.use(express.static(path.join(__dirname, 'public'))); 
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname,   'home.html')); //
 });
 
 
