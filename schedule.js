@@ -6,6 +6,7 @@ import { convertPairIntoCoindcxName,getMiscData,saveMiscResults } from "./util.j
 import { sendEmail } from "./Email.js";
 import {getCoinReadyToBuy} from "./short-term.js";
 import { suddenFallAlgo } from "./suddenfall.js";
+import fetch from 'node-fetch'; 
 
 let canRunShortTerm = true;
 const interval = setInterval(lossCheck, 30*60*1000); // Check every 30 minutes
