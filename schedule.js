@@ -11,6 +11,8 @@ let canRunShortTerm = true;
 const interval = setInterval(lossCheck, 30*60*1000); // Check every 30 minutes
 setInterval(runScheduled, 4 * 60 * 60 * 1000);  // Check every 4 hours
 setInterval(checkOrderOverTime,24*60*60*1000);  // check every 24 hours
+setInterval(keepServerAlive, 12*60*1000); //Make request in every 12 minutes
+// keepServerAlive();
 
 
 async function runScheduled() {
@@ -33,6 +35,25 @@ async function runScheduled() {
   }
 }catch(err) {console.error(err);}
 }
+
+
+async function keepServerAlive() {
+  //render will stop the server if no request is received in 15 min.
+  let baseurl = 'https://requester-twha.onrender.com';
+      fetch( baseurl )
+      .then(response => {
+          if (response.ok) {
+            console.log(`URL ${baseurl} is reachable. Status Code: ${response.status}`);
+          } else {
+            console.error(`URL ${baseurl} returned an error. Status Code: ${response.status}`);
+            sendEmail(`${baseurl} have some Error. Status Code: ${response.status}`);
+          }
+        })
+        .catch(error => {
+          console.error(`Error while checking URL ${baseurl}: ${error.message}`);
+        });
+  }
+  
 
 // Run the function every 4 hours
 
