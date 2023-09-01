@@ -41,6 +41,7 @@ export async function suddenFallAlgo() {
   let check = await isPriceDec(coinObj);
  
   if (check ) {  
+    console.log("Price decreased suddenly");
     let times=1;
    let intervalId=setInterval(async () => {
     let cond=await buyIfPriceIncreaseStart(check);

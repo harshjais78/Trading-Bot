@@ -15,6 +15,7 @@ setInterval(checkOrderOverTime,24*60*60*1000);  // check every 24 hours
 
 async function runScheduled() {
   try{
+    console.log("Schedule ran");
   let balance=await getINRbalance();
   if(balance <101) // check in every 4hrs if I have enough money to buy coins
   return;

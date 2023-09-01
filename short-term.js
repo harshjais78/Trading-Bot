@@ -114,6 +114,7 @@ try{
     if(day<10){
       blackList.push(c.name);
       newList.push({"name":c.name,"timestamp":c.timestamp});
+      console.log("blackList"),JSON.stringify(blackList);
     }
   }
   miscObj.blackList=newList;
