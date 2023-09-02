@@ -38,8 +38,9 @@ async function runScheduled() {
 }
 
 
-async function keepServerAlive() {
+ function keepServerAlive() {
   //render will stop the server if no request is received in 15 min.
+  try{
   let baseurl = 'https://requester-twha.onrender.com';
       fetch( baseurl )
       .then(response => {
@@ -53,6 +54,8 @@ async function keepServerAlive() {
         .catch(error => {
           console.error(`Error while checking URL ${baseurl}: ${error.message}`);
         });
+}catch(error) {console.error(error);}
+
   }
   
 
