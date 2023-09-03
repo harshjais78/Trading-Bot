@@ -12,7 +12,7 @@ let canRunShortTerm = true;
 const interval = setInterval(lossCheck, 30*60*1000); // Check every 30 minutes
 setInterval(runScheduled, 4 * 60 * 60 * 1000);  // Check every 4 hours
 setInterval(checkOrderOverTime,24*60*60*1000);  // check every 24 hours
-setInterval(keepServerAlive, 12*60*1000); //Make request in every 12 minutes
+setInterval(keepServerAlive, 5*60*1000); //Make request in every 5 minutes
 // keepServerAlive();
 
 
