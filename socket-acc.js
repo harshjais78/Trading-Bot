@@ -21,7 +21,7 @@ const signature = crypto.createHmac('sha256', CONSTANT.secret).update(payload).d
 
 socket.on("connect", () => {
   //Join channel  
-  console.log('connected');
+  console.log('wesocket connected');
   socket.emit('join', {
     'channelName': "coindcx",
     'authSignature': signature,

@@ -1,4 +1,4 @@
-import { getCandleChart, getINRbalance } from "./ApiInfo.js";
+import { getCandleChart, getINRbalance,getTicker } from "./ApiInfo.js";
 import { activeOrders, sellCoins } from "./trans.js";
 import { daysPassedSince, generateLossOrderId, getStoredJson, moveOrderIdToSell } from "./util.js";
 import * as CONSTANT from "./Constant.js"; 
@@ -6,15 +6,39 @@ import { convertPairIntoCoindcxName,getMiscData,saveMiscResults } from "./util.j
 import { sendEmail } from "./Email.js";
 import {getCoinReadyToBuy} from "./short-term.js";
 import { suddenFallAlgo } from "./suddenfall.js";
+import { coinHiked } from "./hike.js";
 import fetch from 'node-fetch'; 
 
 let canRunShortTerm = true;
 const interval = setInterval(lossCheck, 30*60*1000); // Check every 30 minutes
-setInterval(runScheduled, 4 * 60 * 60 * 1000);  // Check every 4 hours
-setInterval(checkOrderOverTime,24*60*60*1000);  // check every 24 hours
+// setInterval(runScheduled, 4 * 60 * 60 * 1000);  // Check every 4 hours
+// setInterval(checkOrderOverTime,24*60*60*1000);  // check every 24 hours
 setInterval(keepServerAlive, 5*60*1000); //Make request in every 5 minutes
-// keepServerAlive();
+setInterval(hikeScheduler, 10*60*1000); //Make request in every 10 min
 
+let ticker10minAgo;
+let id=1;
+hikeScheduler();  // important to run
+
+
+async function hikeScheduler() {
+  try{
+    if(ticker10minAgo == undefined){
+    ticker10minAgo =await getTicker();
+    return;
+  }
+  
+  console.log("hike Scheduler ran");
+  let balance=await getINRbalance();
+  // if(balance <101) // check in every 4hrs if I have enough money to buy coins
+  // return;
+  coinHiked(ticker10minAgo,id);
+  ticker10minAgo=await getTicker();
+  id++;
+  if(id>100) id=1;
+ 
+}catch(err) {console.error(err);}
+}
 
 async function runScheduled() {
   try{
@@ -36,7 +60,6 @@ async function runScheduled() {
   }
 }catch(err) {console.error(err);}
 }
-
 
  function keepServerAlive() {
   //render will stop the server if no request is received in 15 min.
@@ -76,8 +99,6 @@ async function checkOrderOverTime(){   //Notify if the order has not been update
 
 }
 }
-
-
 
   async function getCurrentPrice(coinName) {
     const candleData = await getCandleChart("1m", coinName);

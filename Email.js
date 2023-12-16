@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 
 export async function sendEmail (message){
 const data = {
-    service_id: 'Coindcx alert', //uncomment this to use the service
+    // service_id: 'Coindcx alert', //uncomment this to use the service
     template_id: 'template_rpcqp5h',
     user_id: 'C1wF5QXy4IUHVBrql',
     template_params: {
