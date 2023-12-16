@@ -187,9 +187,11 @@ return true;
 
 
 function getTime() {
-  const now = new Date();
-  const hours = now.getHours().toString().padStart(2, '0');
-  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const nowUTC = new Date(); // Current UTC time
+  const now = new Date(new Date(nowUTC.getTime() + (5 * 60 + 30) * 60000)); // Adding 5 hours and 30 minutes);
+
+  const hours = now.getUTCHours().toString().padStart(2, '0');
+  const minutes = now.getUTCMinutes().toString().padStart(2, '0');
 
   return `${hours}:${minutes}`;
 }
