@@ -6,9 +6,10 @@ import { sendLogs } from "./firebase.js";
 /*
 Target: Some coins suddenly increase by more than 100% in 2 hours.
 
-Logic: target coins who have increased by more than @priceHikeThreshold in 10 minutes
-make sure before buying that coins have not started to decrease. If it is decreased even the 
-slightest, don't buy else buy immediately and sell
+Logic: target coins who have increased by more than @priceHikeThreshold in 10 minutes or combining prev 2 
+candles of 10 min hike is more than 30% and also
+make sure before buying coin that price have not started to decrease by more than 6%. If it is decreased 
+don't buy otherwise buy immediately and sell.
 
 Sell: bought coins should be sell in two ways 1. limit price of about 25% and greedy way @greedySell().
 In greedySell() function, idea is wait for coin to reach max price and as soon as it starts to decrease
@@ -21,27 +22,38 @@ monotonic inc/dec.
 
 let id=0;
 
-export async function coinHiked(ticker15minAgo,no) {
+export async function coinHiked(ticker15minAgo,ticker20minAgo,lag1min,no) {
   console.log('coinHiked function called');
   id=no;
   if(ticker15minAgo == undefined) 
    return ;
-  checkPriceHike(ticker15minAgo);
+  checkPriceHike(ticker15minAgo,ticker20minAgo,lag1min);
 }
 
 
-async function checkPriceHike(previousData) {
+async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
   try {
     const currentTicker = await getTicker();
     const priceHikeThreshold = 20; // Percentage threshold for considering a price hike
+    const combineHikeThreshold = 30;
     let coinsWithHike = [];
     let coinsFailedHike = [];
+    let prevChangePerc = 0;
 
     currentTicker.forEach((currentCoin,idx) => {
       const symbol = currentCoin.market;
       const previousCoin=previousData[idx];
       // console.log(`previousData ${previousCoin}`);
       const previousPrice = parseFloat(previousCoin.last_price);
+      if(ticker20minAgo){
+        let coin20minAgo = ticker20minAgo[idx];
+        let prev20minPrice = parseFloat(coin20minAgo.last_price);
+        let prev10minDeltaPerc = (previousPrice - prev20minPrice)/previousPrice *100; 
+        if(prev10minDeltaPerc >= 9) 
+          prevChangePerc = prev10minDeltaPerc;
+        else
+          prevChangePerc = 0;
+        }
 
       // console.log(symbol, previousCoin.market)
       if(symbol !==previousCoin.market)
@@ -49,9 +61,9 @@ async function checkPriceHike(previousData) {
 
       if (previousPrice) {
         const currentPrice = parseFloat(currentCoin.last_price);
-        const priceChangePercent = ((currentPrice - previousPrice) / previousPrice) * 100;
+        const priceChangePercent = ((currentPrice - previousPrice) / currentPrice) * 100;
 
-        if (priceChangePercent >= priceHikeThreshold) {
+        if (priceChangePercent >= priceHikeThreshold || priceChangePercent+prevChangePerc >=combineHikeThreshold) { 
           coinsWithHike.push({
             symbol,
             priceChangePercent,
@@ -60,7 +72,8 @@ async function checkPriceHike(previousData) {
         }else{
           coinsFailedHike.push({
             symbol,
-            priceChangePercent,
+            curr10minDelta: priceChangePercent,
+            combineChangePercent: (prevChangePerc+priceChangePercent),
             price:currentPrice,
           });
         }
@@ -70,11 +83,11 @@ async function checkPriceHike(previousData) {
     if(coinsWithHike.length > 0) {
     // Sort coins by price change percentage in descending order
     coinsWithHike.sort((a, b) => b.priceChangePercent - a.priceChangePercent);
-    await sleep(5000); // sleep for 5 sec
+   
 
-    let incTicker = await getTicker();
-    console.log('Coins with Price Hike (>25%):', coinsWithHike);
-    sendLogs(`id: ${id} ${getTime()}: Coins with Price Hike (>25%): ${JSON.stringify(coinsWithHike)}`)
+    let incTicker = lag1min;
+    console.log(`id: ${id} ${getTime()}: PrevChange% ${prevChangePerc} Coins with Price Hike (>20%): ${JSON.stringify(coinsWithHike)}`);
+    sendLogs(`id: ${id} ${getTime()}: PrevChange% ${prevChangePerc} Coins with Price Hike (>20%): ${JSON.stringify(coinsWithHike)}`)
 
     while (isPriceEqual(incTicker, coinsWithHike[0])) {
       await sleep(2000);
@@ -82,13 +95,16 @@ async function checkPriceHike(previousData) {
       console.log('Checking again...');
     }
 
-    sendLogs(`id: ${id} ${getTime()}: Price is not same`)
-    incTicker.forEach((currentTicker)=> {
+    sendLogs(`id: ${id} ${getTime()}: Price is not same`);
 
+    incTicker.forEach((currentTicker)=> {
      if(currentTicker.market == coinsWithHike[0].symbol){
-     if(parseFloat(coinsWithHike[0].price) > parseFloat(currentTicker.last_price)){
+      let delta =(parseFloat(coinsWithHike[0].price) - parseFloat(currentTicker.last_price)) /parseFloat(coinsWithHike[0].price) * 100;
+     
+      if( delta < -6 ){
+      // if coins value is decreased more than 6% then, most porbably coins will decrease further.
       console.log('Price started to dec');
-      sendLogs(`id: ${id} ${getTime()}: Price started to dec`)
+      sendLogs(`id: ${id} ${getTime()}: Price started to dec. delta value: ${delta}`)
       return; // most probably coin have started to decr.
      }
       else{
@@ -105,10 +121,14 @@ async function checkPriceHike(previousData) {
 
     }
     else{
-    coinsFailedHike.sort((a, b) => b.priceChangePercent - a.priceChangePercent);
+      // send log for both type of comparisons
+    coinsFailedHike.sort((a, b) => b.curr10minDelta - a.curr10minDelta);
+    let coinsFailedHike2 = {...coinsFailedHike};
+    coinsFailedHike2.sort((a, b) => b.combineChangePercent - a.combineChangePercent);
+
     console.log('No coin met the criteria of sudden hike')
     sendLogs(`id: ${id} ${getTime()}: No coin met the criteria of sudden hike`);
-    sendLogs(`id: ${id} ${getTime()}: Max reached: ${JSON.stringify(coinsFailedHike)}`);
+    sendLogs(`id: ${id} ${getTime()}: Max reached alone: ${JSON.stringify(Object.entries(coinsFailedHike).slice(0, 4))} Max reached combined: ${JSON.stringify(Object.entries(coinsFailedHike2).slice(0, 5))}`);
   }
 
   } catch (error) {
