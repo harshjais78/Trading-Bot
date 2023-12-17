@@ -2,6 +2,7 @@ import { getCandleChart,getMarketDetails,getTicker } from "./ApiInfo.js";
 import { sendEmail } from "./Email.js";
 import {  startBuyCoinProcess} from "./trans.js";
 import { sendLogs } from "./firebase.js";
+import { sleep } from "./util.js";
 
 /*
 Target: Some coins suddenly increase by more than 100% in 2 hours.

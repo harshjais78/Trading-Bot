@@ -2,7 +2,7 @@ import { getCandleChart, getINRbalance,getTicker } from "./ApiInfo.js";
 import { activeOrders, sellCoins } from "./trans.js";
 import { daysPassedSince, generateLossOrderId, getStoredJson, moveOrderIdToSell } from "./util.js";
 import * as CONSTANT from "./Constant.js"; 
-import { convertPairIntoCoindcxName,getMiscData,saveMiscResults } from "./util.js";
+import { convertPairIntoCoindcxName,getMiscData,saveMiscResults,sleep } from "./util.js";
 import { sendEmail } from "./Email.js";
 import {getCoinReadyToBuy} from "./short-term.js";
 import { suddenFallAlgo } from "./suddenfall.js";
