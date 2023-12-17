@@ -8,6 +8,7 @@ import {getCoinReadyToBuy} from "./short-term.js";
 import { suddenFallAlgo } from "./suddenfall.js";
 import { coinHiked, getTime } from "./hike.js";
 import fetch from 'node-fetch'; 
+import { sendLogs } from "./firebase.js";
 
 let canRunShortTerm = true;
 const interval = setInterval(lossCheck, 30*60*1000); // Check every 30 minutes
@@ -35,7 +36,7 @@ async function hikeScheduler() {
   // return;
   const lag1min=await getTicker();
   await sleep(1000*60); // sleep for 1 minute
-  coinHiked(ticker10minAgo,ticker20minAgo,lag1min);
+  coinHiked(ticker10minAgo,ticker20minAgo,lag1min,id);
   ticker20minAgo=ticker10minAgo;
   ticker10minAgo=await getTicker();
   id++;

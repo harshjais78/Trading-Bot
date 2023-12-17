@@ -40,6 +40,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
     let coinsWithHike = [];
     let coinsFailedHike = [];
     let prevChangePerc = 0;
+    let price20minBack=0;
 
     currentTicker.forEach((currentCoin,idx) => {
       const symbol = currentCoin.market;
@@ -49,7 +50,8 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
       if(ticker20minAgo){
         let coin20minAgo = ticker20minAgo[idx];
         let prev20minPrice = parseFloat(coin20minAgo.last_price);
-        let prev10minDeltaPerc = (previousPrice - prev20minPrice)/previousPrice *100; 
+        let prev10minDeltaPerc = ((previousPrice - prev20minPrice)/previousPrice) *100; 
+        price20minBack = prev20minPrice;
         if(prev10minDeltaPerc >= 9) 
           prevChangePerc = prev10minDeltaPerc;
         else
@@ -68,14 +70,19 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
           coinsWithHike.push({
             symbol,
             priceChangePercent,
-            price:currentPrice,
+            combineChangePercent: (prevChangePerc+priceChangePercent),
+            currentPrice,
+            previousPrice,
+            price20minBack,
           });
         }else{
           coinsFailedHike.push({
             symbol,
-            curr10minDelta: priceChangePercent,
+            curr10minDeltaPerc: priceChangePercent,
             combineChangePercent: (prevChangePerc+priceChangePercent),
-            price:currentPrice,
+            currentPrice,
+            previousPrice,
+            price20minBack,
           });
         }
       }
@@ -123,7 +130,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
     }
     else{
       // send log for both type of comparisons
-    coinsFailedHike.sort((a, b) => b.curr10minDelta - a.curr10minDelta);
+    coinsFailedHike.sort((a, b) => b.curr10minDeltaPerc - a.curr10minDeltaPerc);
     let coinsFailedHike2 = {...coinsFailedHike};
     coinsFailedHike2.sort((a, b) => b.combineChangePercent - a.combineChangePercent);
 
