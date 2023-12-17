@@ -34,7 +34,8 @@ async function checkPriceHike(previousData) {
   try {
     const currentTicker = await getTicker();
     const priceHikeThreshold = 25; // Percentage threshold for considering a price hike
-    const coinsWithHike = [];
+    let coinsWithHike = [];
+    let coinsFailedHike = [];
 
     currentTicker.forEach((currentCoin,idx) => {
       const symbol = currentCoin.market;
@@ -50,8 +51,14 @@ async function checkPriceHike(previousData) {
         const currentPrice = parseFloat(currentCoin.last_price);
         const priceChangePercent = ((currentPrice - previousPrice) / previousPrice) * 100;
 
-        if (priceChangePercent > priceHikeThreshold) {
+        if (priceChangePercent >= priceHikeThreshold) {
           coinsWithHike.push({
+            symbol,
+            priceChangePercent,
+            price:currentPrice,
+          });
+        }else{
+          coinsFailedHike.push({
             symbol,
             priceChangePercent,
             price:currentPrice,
@@ -63,11 +70,11 @@ async function checkPriceHike(previousData) {
     if(coinsWithHike.length > 0) {
     // Sort coins by price change percentage in descending order
     coinsWithHike.sort((a, b) => b.priceChangePercent - a.priceChangePercent);
-    await sleep(3000); // sleep for 3 sec
+    await sleep(5000); // sleep for 5 sec
 
     let incTicker = await getTicker();
-    console.log('Coins with Price Hike (>26%):', coinsWithHike);
-    sendLogs(`id: ${id} ${getTime()}: Coins with Price Hike (>26%): ${JSON.stringify(coinsWithHike)}`)
+    console.log('Coins with Price Hike (>25%):', coinsWithHike);
+    sendLogs(`id: ${id} ${getTime()}: Coins with Price Hike (>25%): ${JSON.stringify(coinsWithHike)}`)
 
     while (isPriceEqual(incTicker, coinsWithHike[0])) {
       await sleep(2000);
@@ -98,8 +105,10 @@ async function checkPriceHike(previousData) {
 
     }
     else{
+    coinsFailedHike.sort((a, b) => b.priceChangePercent - a.priceChangePercent);
     console.log('No coin met the criteria of sudden hike')
     sendLogs(`id: ${id} ${getTime()}: No coin met the criteria of sudden hike`);
+    sendLogs(`id: ${id} ${getTime()}: Max reached: ${JSON.stringify(coinsFailedHike)}`);
   }
 
   } catch (error) {
@@ -150,7 +159,7 @@ async function greedySell(coinsWithHike){
           //sell coin and replace sold coin price with currentPrice
           const percentageEarned = ((currentPrice - boughtPrice) / currentPrice) * 100;
 
-          sendLogs(`id: ${id} ${getTime()}: Bought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned: ${percentageEarned.toFixed(2)}%`);
+          sendLogs(`id: ${id} ${getTime()}: Bought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
           console.log(`Bought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
           sendEmail(`From Hike, \nBought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% `)
           
@@ -186,7 +195,7 @@ return true;
 }
 
 
-function getTime() {
+export function getTime() {
   const nowUTC = new Date(); // Current UTC time
   const now = new Date(new Date(nowUTC.getTime() + (5 * 60 + 30) * 60000)); // Adding 5 hours and 30 minutes);
 

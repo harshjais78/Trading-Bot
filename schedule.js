@@ -6,7 +6,7 @@ import { convertPairIntoCoindcxName,getMiscData,saveMiscResults } from "./util.j
 import { sendEmail } from "./Email.js";
 import {getCoinReadyToBuy} from "./short-term.js";
 import { suddenFallAlgo } from "./suddenfall.js";
-import { coinHiked } from "./hike.js";
+import { coinHiked, getTime } from "./hike.js";
 import fetch from 'node-fetch'; 
 
 let canRunShortTerm = true;
@@ -25,6 +25,7 @@ async function hikeScheduler() {
   try{
     if(ticker10minAgo == undefined){
     ticker10minAgo =await getTicker();
+    sendLogs(`id: ${id} ${getTime()} ${JSON.stringify(ticker10minAgo)}`);
     return;
   }
   
@@ -36,6 +37,8 @@ async function hikeScheduler() {
   ticker10minAgo=await getTicker();
   id++;
   if(id>100) id=1;
+  sendLogs(`id: ${id} ${getTime()} ${JSON.stringify(ticker10minAgo)}`);
+
  
 }catch(err) {console.error(err);}
 }
