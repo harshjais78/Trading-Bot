@@ -49,13 +49,19 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
       const previousPrice = parseFloat(previousCoin.last_price);
       if(ticker20minAgo){
         let coin20minAgo = ticker20minAgo[idx];
+        if(coin20minAgo.market == symbol){
         let prev20minPrice = parseFloat(coin20minAgo.last_price);
         let prev10minDeltaPerc = ((previousPrice - prev20minPrice)/previousPrice) *100; 
         price20minBack = prev20minPrice;
         if(prev10minDeltaPerc >= 9) 
           prevChangePerc = prev10minDeltaPerc;
-        else
+          else
           prevChangePerc = 0;
+        }
+        else{
+          prevChangePerc = 0;
+         sendLogs(`id: ${id} ${getTime()} current symbol ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`);
+        }
         }
 
       // console.log(symbol, previousCoin.market)
@@ -85,6 +91,8 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
             price20minBack,
           });
         }
+        price20minBack=0;
+        prevChangePerc = 0;
       }
     });
 
@@ -94,8 +102,8 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
    
 
     let incTicker = lag1min;
-    console.log(`id: ${id} ${getTime()}: PrevChange% ${prevChangePerc} Coins with Price Hike (>20%): ${JSON.stringify(coinsWithHike)}`);
-    sendLogs(`id: ${id} ${getTime()}: PrevChange% ${prevChangePerc} Coins with Price Hike (>20%): ${JSON.stringify(coinsWithHike)}`)
+    console.log(`id: ${id} ${getTime()}: Coins with Price Hike (>20%): ${JSON.stringify(coinsWithHike)}`);
+    sendLogs(`id: ${id} ${getTime()}: Coins with Price Hike (>20%): ${JSON.stringify(coinsWithHike)}`)
 
     while (isPriceEqual(incTicker, coinsWithHike[0])) {
       await sleep(2000);
@@ -109,7 +117,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
      if(currentTicker.market == coinsWithHike[0].symbol){
       let delta =(parseFloat(coinsWithHike[0].price) - parseFloat(currentTicker.last_price)) /parseFloat(coinsWithHike[0].price) * 100;
      
-      if( delta < -6 ){
+      if( delta < -5 ){
       // if coins value is decreased more than 6% then, most porbably coins will decrease further.
       console.log('Price started to dec');
       sendLogs(`id: ${id} ${getTime()}: Price started to dec. delta value: ${delta}`)
@@ -189,7 +197,8 @@ async function greedySell(coinsWithHike){
 
           sendLogs(`id: ${id} ${getTime()}: Bought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
           console.log(`Bought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
-          sendEmail(`From Hike, \nBought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% `)
+          sendLogs(`id: ${id} ${getTime()}:----------------------------------------------------------`);
+          // sendEmail(`From Hike, \nBought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% `)
           
           //clear the interval
           clearInterval(intervalId);
@@ -207,7 +216,7 @@ async function greedySell(coinsWithHike){
 
 function isPriceEqual(incTicker,coinsWithHike){
 const symbol=coinsWithHike.symbol;
-const price=parseFloat(coinsWithHike.price);
+const price=parseFloat(coinsWithHike.currentPrice); // bought price
 for (const currentTicker of incTicker) {
   if (currentTicker.market === symbol) {
     console.log(parseFloat(currentTicker.last_price), price, parseFloat(currentTicker.last_price) === price);
