@@ -33,7 +33,7 @@ export async function coinHiked(ticker15minAgo,no) {
 async function checkPriceHike(previousData) {
   try {
     const currentTicker = await getTicker();
-    const priceHikeThreshold = 25; // Percentage threshold for considering a price hike
+    const priceHikeThreshold = 20; // Percentage threshold for considering a price hike
     let coinsWithHike = [];
     let coinsFailedHike = [];
 
