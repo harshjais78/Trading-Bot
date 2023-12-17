@@ -131,7 +131,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
     else{
       // send log for both type of comparisons
     coinsFailedHike.sort((a, b) => b.curr10minDeltaPerc - a.curr10minDeltaPerc);
-    let coinsFailedHike2 = {...coinsFailedHike};
+    let coinsFailedHike2 = [...coinsFailedHike];
     coinsFailedHike2.sort((a, b) => b.combineChangePercent - a.combineChangePercent);
 
     console.log('No coin met the criteria of sudden hike')
