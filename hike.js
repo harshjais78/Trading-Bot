@@ -53,14 +53,14 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
         let prev20minPrice = parseFloat(coin20minAgo.last_price);
         let prev10minDeltaPerc = ((previousPrice - prev20minPrice)/previousPrice) *100; 
         price20minBack = prev20minPrice;
-        if(prev10minDeltaPerc >= 9) 
-          prevChangePerc = prev10minDeltaPerc;
-          else
+        // if(prev10minDeltaPerc >= 9) 
+        //   prevChangePerc = prev10minDeltaPerc;
+        //   else
           prevChangePerc = 0;
         }
         else{
           prevChangePerc = 0;
-         sendLogs(`id: ${id} ${getTime()} current symbol ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`);
+        //  sendLogs(`id: ${id} ${getTime()} current symbol ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`);
         }
         }
 
