@@ -15,7 +15,7 @@ const interval = setInterval(lossCheck, 30*60*1000); // Check every 30 minutes
 // setInterval(runScheduled, 4 * 60 * 60 * 1000);  // Check every 4 hours
 // setInterval(checkOrderOverTime,24*60*60*1000);  // check every 24 hours
 setInterval(keepServerAlive, 5*60*1000); //Make request in every 5 minutes
-setInterval(hikeScheduler,9*60*1000); //Make request in every 10 min
+setInterval(hikeScheduler,4*60*1000); //Make request in every 10 min
 
 let ticker10minAgo;
 let ticker20minAgo;
@@ -38,12 +38,12 @@ async function hikeScheduler() {
   await sleep(1000*60); // sleep for 1 minute
   coinHiked(ticker10minAgo,ticker20minAgo,lag1min,id);
   sendLogs(`id: ${id} ${getTime()} ticker20minAgo used ${JSON.stringify(ticker20minAgo)}`);
+  sendLogs(`id: ${id} ${getTime()} ticker10minAgo used ${JSON.stringify(ticker10minAgo)}`);
 
   ticker20minAgo=[...ticker10minAgo];
   ticker10minAgo=await getTicker();
   id++;
   if(id>100) id=1;
-  sendLogs(`id: ${id} ${getTime()} ticker10minAgo used ${JSON.stringify(ticker10minAgo)}`);
 
  
 }catch(err) {console.error(err);}

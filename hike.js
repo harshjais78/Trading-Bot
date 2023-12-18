@@ -41,12 +41,17 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
     let coinsFailedHike = [];
     let prevChangePerc = 0;
     let price20minBack=0;
+    let matched=true;
 
     currentTicker.forEach((currentCoin,idx) => {
       const symbol = currentCoin.market;
       const previousCoin=previousData[idx];
       // console.log(`previousData ${previousCoin}`);
       const previousPrice = parseFloat(previousCoin.last_price);
+
+      if(symbol !==previousCoin.market)
+      return;
+
       if(ticker20minAgo){
         let coin20minAgo = ticker20minAgo[idx];
         if(coin20minAgo.market == symbol){
@@ -57,19 +62,21 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
           prevChangePerc = prev10minDeltaPerc;
           else
           prevChangePerc = 0;
-        // console.log(`id: ${id} ${getTime()}    ${symbol} matched ${coin20minAgo.market}`)
+        console.log(`id: ${id} ${getTime()}    ${symbol} matched ${coin20minAgo.market}`)
 
         }
         else{
           prevChangePerc = 0;
+          matched = false;
         //  sendLogs(`id: ${id} ${getTime()} current symbol ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`);
-        // console.log(`id: ${id} ${getTime()} current symbol  ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`)
+        console.log(`id: ${id} ${getTime()} current symbol  ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`)
       }
         }
 
+      
+
       // console.log(symbol, previousCoin.market)
-      if(symbol !==previousCoin.market)
-      return;
+
 
       if (previousPrice) {
         const currentPrice = parseFloat(currentCoin.last_price);
@@ -98,6 +105,11 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
         prevChangePerc = 0;
       }
     });
+
+    if(!matched)
+    sendLogs(`id: ${id} ${getTime()} current symbol doesnot match with prev20min symbol ${JSON.stringify(ticker20minAgo)}`);
+    else
+    sendLogs(`id: ${id} ${getTime()} matched`);
 
     if(coinsWithHike.length > 0) {
     // Sort coins by price change percentage in descending order
