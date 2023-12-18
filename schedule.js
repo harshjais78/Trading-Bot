@@ -37,7 +37,7 @@ async function hikeScheduler() {
   const lag1min=await getTicker();
   await sleep(1000*60); // sleep for 1 minute
   coinHiked(ticker10minAgo,ticker20minAgo,lag1min,id);
-  ticker20minAgo=ticker10minAgo;
+  ticker20minAgo=[...ticker10minAgo];
   ticker10minAgo=await getTicker();
   id++;
   if(id>100) id=1;
