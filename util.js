@@ -2,6 +2,7 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import path from "path";
 import * as CONSTANT from './Constant.js'
+import { getMarketDetails } from "./ApiInfo.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -132,4 +133,41 @@ export function timestampToDay(timestamp) {
 
   export function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  export async function buildPair() {
+    try {
+      let marketDetails = await getMarketDetails();
+  
+      // Convert marketDetails array to an object with symbol as keys
+      const pairsObject = marketDetails.reduce((accumulator, item) => {
+        accumulator[item.symbol] = item.pair;
+        return accumulator;
+      }, {});
+  
+      // Convert the object to JSON string
+      const jsonString = JSON.stringify(pairsObject, null, 2);
+  
+      // Write the JSON string to a file named 'pairs.json'
+      fs.writeFileSync('pairs.json', jsonString);
+  
+      console.log('Pairs information has been saved to pairs.json');
+    } catch (error) {
+      console.error('An error occurred:', error);
+    }
+  }
+
+  export function getPair(symbol) {
+    try {
+      const fileContent = fs.readFileSync('pairs.json', 'utf8');
+        const pairsObject = JSON.parse(fileContent);
+  
+      // Check if the symbol exists in the object
+      if (symbol in pairsObject) {
+        return pairsObject[symbol];
+      } 
+    } catch (error) {
+      console.error('An error occurred:', error);
+      return 'Error retrieving pair information';
+    }
   }

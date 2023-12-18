@@ -1,8 +1,10 @@
 import { getCandleChart,getMarketDetails,getTicker } from "./ApiInfo.js";
 import { sendEmail } from "./Email.js";
+import fetch from 'node-fetch'; 
 import {  startBuyCoinProcess} from "./trans.js";
 import { sendLogs } from "./firebase.js";
-import { sleep } from "./util.js";
+import { getPair, sleep } from "./util.js";
+import * as CONSTANT from './Constant.js'
 
 /*
 Target: Some coins suddenly increase by more than 100% in 2 hours.
@@ -16,6 +18,10 @@ Sell: bought coins should be sell in two ways 1. limit price of about 25% and gr
 In greedySell() function, idea is wait for coin to reach max price and as soon as it starts to decrease
 sell it because coins which have hiked suddenly also decrease suddenly. Observed that they mostly follow
 monotonic inc/dec. 
+
+pending:
+ single min contributiing more than 60% or more than (100% or decreaseing) don't buy. 
+ single min contributiing more than 60% and less than 100 and inc buy. 
 
 */
 
@@ -35,8 +41,8 @@ export async function coinHiked(ticker15minAgo,ticker20minAgo,lag1min,no) {
 async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
   try {
     const currentTicker = await getTicker();
-    const priceHikeThreshold = 20; // Percentage threshold for considering a price hike
-    const combineHikeThreshold = 30;
+    const priceHikeThreshold = 12; // Percentage threshold for considering a price hike
+    const combineHikeThreshold = 17;
     let coinsWithHike = [];
     let coinsFailedHike = [];
     let prevChangePerc = 0;
@@ -58,7 +64,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
         let prev20minPrice = parseFloat(coin20minAgo.last_price);
         let prev10minDeltaPerc = ((previousPrice - prev20minPrice)/prev20minPrice) *100; 
         price20minBack = prev20minPrice;
-        if(prev10minDeltaPerc >= 9) 
+        if(prev10minDeltaPerc >= 4) 
           prevChangePerc = prev10minDeltaPerc;
           else
           prevChangePerc = 0;
@@ -70,7 +76,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
             let prev20minPrice = parseFloat(coin20minAgo.last_price);
             let prev10minDeltaPerc = ((previousPrice - prev20minPrice)/prev20minPrice) *100; 
             price20minBack = prev20minPrice;
-            if(prev10minDeltaPerc >= 9) 
+            if(prev10minDeltaPerc >= 4) 
               prevChangePerc = prev10minDeltaPerc;
               else
               prevChangePerc = 0;
@@ -79,15 +85,9 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
 
           })
           matched = false;
-        //  sendLogs(`id: ${id} ${getTime()} current symbol ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`);
-        // console.log(`id: ${id} ${getTime()} current symbol  ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`)
       }
         }
-
-      
-
       // console.log(symbol, previousCoin.market)
-
 
       if (previousPrice) {
         const currentPrice = parseFloat(currentCoin.last_price);
@@ -112,21 +112,20 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
             price20minBack,
           });
         }
-        price20minBack=0;
-        prevChangePerc = 0;
       }
+
+      price20minBack=0;
+      prevChangePerc = 0;
     });
 
     if(!matched){
-    sendLogs(`id: ${id} ${getTime()} current symbol doesnot match with prev20min symbol ${JSON.stringify(ticker20minAgo)}`);
+    sendLogs(`id: ${id} ${getTime()} current symbol doesnot match with prev20min symbol`);
       console.log(`id: ${id} not matched`);
   }else{
     sendLogs(`id: ${id} ${getTime()} matched`);
     console.log(`id: ${id}  matched`);
     }
-    if(id>1 && prevChangePerc ==0)
-    sendLogs(`id: ${id}  ${getTime()} failed to match inside`);
-  
+
     if(coinsWithHike.length > 0) {
     // Sort coins by price change percentage in descending order
     coinsWithHike.sort((a, b) => b.priceChangePercent - a.priceChangePercent);
@@ -144,17 +143,23 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
 
     sendLogs(`id: ${id} ${getTime()}: Price is not same`);
 
-    incTicker.forEach((ticker1minBack)=> {
+    incTicker.forEach(async (ticker1minBack)=> {
      if(ticker1minBack.market == coinsWithHike[0].symbol){
       let delta =(parseFloat(coinsWithHike[0].price) - parseFloat(ticker1minBack.last_price)) /parseFloat(ticker1minBack.last_price) * 100;
      
       if( delta < -5 ){
-      // if coins value is decreased more than 6% then, most porbably coins will decrease further.
+      // if coins value is decreased more than 5% then, most porbably coins will decrease further.
       console.log('Price started to dec');
       sendLogs(`id: ${id} ${getTime()}: Price started to dec. delta value: ${delta}`)
       return; // most probably coin have started to decr.
      }
       else{
+        const result =await isSingleMinHike(coinsWithHike[0]);
+        if(result){
+          sendLogs(`id: ${id} ${getTime()} Single Min Hiked, recommended return...`);
+          console.log(`id: ${id} ${getTime()} Single Min Hiked, recommended return...`);
+          // return;
+        }
       sendLogs(`id: ${id} ${getTime()}: virtual Coin: ${coinsWithHike[0].symbol} bought at ${ticker1minBack.last_price}. Preparing to sell`)
       console.log(`virtual Coin: ${coinsWithHike[0].symbol} bought at ${ticker1minBack.last_price} preparing to sell`);
       //buy at current market
@@ -193,7 +198,7 @@ async function greedySell(coinsWithHike){
   console.log(maxPrice);
 
   // Fetch ticker data every 3 seconds
-  const intervalId = setInterval(async () => {
+  const intervalId = setInterval(async (id) => {
     try {
       const tickerData = await getTicker(symbol);
 
@@ -226,10 +231,10 @@ async function greedySell(coinsWithHike){
           //sell coin and replace sold coin price with currentPrice
           const percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
 
-          sendLogs(`id: ${id} ${getTime()}: Bought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
-          console.log(`Bought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
+          sendLogs(`id: ${id} ${getTime()}: For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
+          console.log(`For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
           sendLogs(`id: ${id} ${getTime()}:----------------------------------------------------------`);
-          // sendEmail(`From Hike, \nBought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% `)
+          sendEmail(`From Hike, for coin: ${symbol}, \nBought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% `)
           
           //clear the interval
           clearInterval(intervalId);
@@ -271,6 +276,45 @@ export function getTime() {
   const minutes = now.getUTCMinutes().toString().padStart(2, '0');
 
   return `${hours}:${minutes}`;
+}
+
+async function isSingleMinHike(coinToMonitor) {
+  const symbol=coinToMonitor.symbol;
+  const hikeRecordedPerc=coinToMonitor.priceChangePercent;
+  let pair=getPair(symbol);
+  if( ! pair)
+  return true;
+
+  let lastCandles=await getLastCandles(pair);
+  lastCandles=lastCandles.slice(0,5);
+
+  const priceChange = coinToMonitor.currentPrice - coinToMonitor.previousPrice;
+
+  let cnt=0;
+  for(const coinDetails of lastCandles){
+    let open=coinDetails.open;
+    let close=coinDetails.close;
+    let changePerc= ((close - open)/priceChange) * 100;
+    // console.log(`changePerc ${changePerc}`);
+    if (changePerc > 60 && cnt==0){ // current min is increasing 
+      sendLogs(`id: ${id} ${getTime()}: in singleMinHike changePerc > 60 && cnt==0`);
+     return false;
+    }
+    else if(changePerc > 60 ){
+      sendLogs(`id: ${id} ${getTime()}: in singleMinHike changePerc > 60`);
+      return true;
+    }
+  }
+  return false;
+}
+
+async function getLastCandles(coinName){    
+    return fetch(CONSTANT.publicbaseurl + `/market_data/candles?pair=${coinName}&interval=1m`)
+      .then(response => response.json())
+      .catch(error => {
+        console.error('An error occurred:', error);
+        throw error; 
+      });
 }
 
 

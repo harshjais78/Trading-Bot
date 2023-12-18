@@ -1,6 +1,6 @@
 import { getCandleChart, getINRbalance,getTicker } from "./ApiInfo.js";
 import { activeOrders, sellCoins } from "./trans.js";
-import { daysPassedSince, generateLossOrderId, getStoredJson, moveOrderIdToSell } from "./util.js";
+import { buildPair, daysPassedSince, generateLossOrderId, getStoredJson, moveOrderIdToSell } from "./util.js";
 import * as CONSTANT from "./Constant.js"; 
 import { convertPairIntoCoindcxName,getMiscData,saveMiscResults,sleep } from "./util.js";
 import { sendEmail } from "./Email.js";
@@ -15,7 +15,8 @@ const interval = setInterval(lossCheck, 30*60*1000); // Check every 30 minutes
 // setInterval(runScheduled, 4 * 60 * 60 * 1000);  // Check every 4 hours
 // setInterval(checkOrderOverTime,24*60*60*1000);  // check every 24 hours
 setInterval(keepServerAlive, 5*60*1000); //Make request in every 5 minutes
-setInterval(hikeScheduler,9*60*1000); //Make request in every 9 min
+setInterval(hikeScheduler,4*60*1000); //Make request in every 4 min
+setInterval(buildPair,24*60*60*1000); //Make request in every 4 min
 
 let ticker10minAgo;
 let ticker20minAgo;
