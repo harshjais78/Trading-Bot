@@ -37,11 +37,13 @@ async function hikeScheduler() {
   const lag1min=await getTicker();
   await sleep(1000*60); // sleep for 1 minute
   coinHiked(ticker10minAgo,ticker20minAgo,lag1min,id);
+  sendLogs(`id: ${id} ${getTime()} ticker20minAgo used ${JSON.stringify(ticker20minAgo)}`);
+
   ticker20minAgo=[...ticker10minAgo];
   ticker10minAgo=await getTicker();
   id++;
   if(id>100) id=1;
-  sendLogs(`id: ${id} ${getTime()} ${JSON.stringify(ticker10minAgo)}`);
+  sendLogs(`id: ${id} ${getTime()} ticker10minAgo used ${JSON.stringify(ticker10minAgo)}`);
 
  
 }catch(err) {console.error(err);}
