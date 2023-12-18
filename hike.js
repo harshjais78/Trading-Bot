@@ -296,6 +296,10 @@ async function isSingleMinHike(coinToMonitor) {
     let close=coinDetails.close;
     let changePerc= ((close - open)/priceChange) * 100;
     // console.log(`changePerc ${changePerc}`);
+    if(coinDetails.volume == 0){
+      sendLogs(`id: ${id} ${getTime()}: in singleMinHike volume == 0`);
+      return true;
+    }
     if (changePerc > 60 && cnt==0){ // current min is increasing 
       sendLogs(`id: ${id} ${getTime()}: in singleMinHike changePerc > 60 && cnt==0`);
      return false;
