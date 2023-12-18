@@ -15,7 +15,7 @@ const interval = setInterval(lossCheck, 30*60*1000); // Check every 30 minutes
 // setInterval(runScheduled, 4 * 60 * 60 * 1000);  // Check every 4 hours
 // setInterval(checkOrderOverTime,24*60*60*1000);  // check every 24 hours
 setInterval(keepServerAlive, 5*60*1000); //Make request in every 5 minutes
-setInterval(hikeScheduler,4*60*1000); //Make request in every 10 min
+setInterval(hikeScheduler,9*60*1000); //Make request in every 9 min
 
 let ticker10minAgo;
 let ticker20minAgo;

@@ -54,7 +54,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
 
       if(ticker20minAgo){
         let coin20minAgo = ticker20minAgo[idx];
-        if(coin20minAgo.market == symbol){
+        if(coin20minAgo.market == symbol ){
         let prev20minPrice = parseFloat(coin20minAgo.last_price);
         let prev10minDeltaPerc = ((previousPrice - prev20minPrice)/prev20minPrice) *100; 
         price20minBack = prev20minPrice;
@@ -62,14 +62,25 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
           prevChangePerc = prev10minDeltaPerc;
           else
           prevChangePerc = 0;
-        console.log(`id: ${id} ${getTime()}    ${symbol} matched ${coin20minAgo.market}`)
 
         }
         else{
-          prevChangePerc = 0;
+          ticker20minAgo.forEach((coin20minAgo)=>{
+            if(coin20minAgo.market == symbol){
+            let prev20minPrice = parseFloat(coin20minAgo.last_price);
+            let prev10minDeltaPerc = ((previousPrice - prev20minPrice)/prev20minPrice) *100; 
+            price20minBack = prev20minPrice;
+            if(prev10minDeltaPerc >= 9) 
+              prevChangePerc = prev10minDeltaPerc;
+              else
+              prevChangePerc = 0;
+            return;
+          }
+
+          })
           matched = false;
         //  sendLogs(`id: ${id} ${getTime()} current symbol ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`);
-        console.log(`id: ${id} ${getTime()} current symbol  ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`)
+        // console.log(`id: ${id} ${getTime()} current symbol  ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`)
       }
         }
 
@@ -106,11 +117,16 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
       }
     });
 
-    if(!matched)
+    if(!matched){
     sendLogs(`id: ${id} ${getTime()} current symbol doesnot match with prev20min symbol ${JSON.stringify(ticker20minAgo)}`);
-    else
+      console.log(`id: ${id} not matched`);
+  }else{
     sendLogs(`id: ${id} ${getTime()} matched`);
-
+    console.log(`id: ${id}  matched`);
+    }
+    if(id>1 && prevChangePerc ==0)
+    sendLogs(`id: ${id}  ${getTime()} failed to match inside`);
+  
     if(coinsWithHike.length > 0) {
     // Sort coins by price change percentage in descending order
     coinsWithHike.sort((a, b) => b.priceChangePercent - a.priceChangePercent);
