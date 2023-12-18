@@ -51,17 +51,20 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
         let coin20minAgo = ticker20minAgo[idx];
         if(coin20minAgo.market == symbol){
         let prev20minPrice = parseFloat(coin20minAgo.last_price);
-        let prev10minDeltaPerc = ((previousPrice - prev20minPrice)/previousPrice) *100; 
+        let prev10minDeltaPerc = ((previousPrice - prev20minPrice)/prev20minPrice) *100; 
         price20minBack = prev20minPrice;
-        // if(prev10minDeltaPerc >= 9) 
-        //   prevChangePerc = prev10minDeltaPerc;
-        //   else
+        if(prev10minDeltaPerc >= 9) 
+          prevChangePerc = prev10minDeltaPerc;
+          else
           prevChangePerc = 0;
+        // console.log(`id: ${id} ${getTime()}    ${symbol} matched ${coin20minAgo.market}`)
+
         }
         else{
           prevChangePerc = 0;
-        //  sendLogs(`id: ${id} ${getTime()} current symbol ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`);
-        }
+         sendLogs(`id: ${id} ${getTime()} current symbol ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`);
+        console.log(`id: ${id} ${getTime()} current symbol  ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`)
+      }
         }
 
       // console.log(symbol, previousCoin.market)
@@ -70,7 +73,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
 
       if (previousPrice) {
         const currentPrice = parseFloat(currentCoin.last_price);
-        const priceChangePercent = ((currentPrice - previousPrice) / currentPrice) * 100;
+        const priceChangePercent = ((currentPrice - previousPrice) / previousPrice) * 100;
 
         if (priceChangePercent >= priceHikeThreshold || priceChangePercent+prevChangePerc >=combineHikeThreshold) { 
           coinsWithHike.push({
@@ -113,9 +116,9 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
 
     sendLogs(`id: ${id} ${getTime()}: Price is not same`);
 
-    incTicker.forEach((currentTicker)=> {
-     if(currentTicker.market == coinsWithHike[0].symbol){
-      let delta =(parseFloat(coinsWithHike[0].price) - parseFloat(currentTicker.last_price)) /parseFloat(coinsWithHike[0].price) * 100;
+    incTicker.forEach((ticker1minBack)=> {
+     if(ticker1minBack.market == coinsWithHike[0].symbol){
+      let delta =(parseFloat(coinsWithHike[0].price) - parseFloat(ticker1minBack.last_price)) /parseFloat(ticker1minBack.last_price) * 100;
      
       if( delta < -5 ){
       // if coins value is decreased more than 6% then, most porbably coins will decrease further.
@@ -124,10 +127,10 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
       return; // most probably coin have started to decr.
      }
       else{
-      sendLogs(`id: ${id} ${getTime()}: virtual Coin: ${coinsWithHike[0].symbol} bought at ${currentTicker.last_price}. Preparing to sell`)
-      console.log(`virtual Coin: ${coinsWithHike[0].symbol} bought at ${currentTicker.last_price} preparing to sell`);
+      sendLogs(`id: ${id} ${getTime()}: virtual Coin: ${coinsWithHike[0].symbol} bought at ${ticker1minBack.last_price}. Preparing to sell`)
+      console.log(`virtual Coin: ${coinsWithHike[0].symbol} bought at ${ticker1minBack.last_price} preparing to sell`);
       //buy at current market
-      coinsWithHike[0].price=currentTicker.last_price;
+      coinsWithHike[0].price=ticker1minBack.last_price;
       greedySell(coinsWithHike[0]);
     }
     return;
@@ -189,11 +192,11 @@ async function greedySell(coinsWithHike){
           console.log(`New max price for ${symbol}: ${maxPrice}`);
         }
         else{
-        const priceChangePercent = ((maxPrice-currentPrice ) / maxPrice) * 100;
+        const priceChangePercent = ((currentPrice - maxPrice ) / maxPrice) * 100;
 
-        if (priceChangePercent >= 2) {
+        if (priceChangePercent <= -2) {
           //sell coin and replace sold coin price with currentPrice
-          const percentageEarned = ((currentPrice - boughtPrice) / currentPrice) * 100;
+          const percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
 
           sendLogs(`id: ${id} ${getTime()}: Bought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
           console.log(`Bought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
