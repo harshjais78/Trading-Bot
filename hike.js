@@ -62,8 +62,8 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
         }
         else{
           prevChangePerc = 0;
-         sendLogs(`id: ${id} ${getTime()} current symbol ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`);
-        console.log(`id: ${id} ${getTime()} current symbol  ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`)
+        //  sendLogs(`id: ${id} ${getTime()} current symbol ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`);
+        // console.log(`id: ${id} ${getTime()} current symbol  ${symbol} doesnot match with prev20min symbol ${coin20minAgo.market}`)
       }
         }
 
