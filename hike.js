@@ -41,8 +41,8 @@ export async function coinHiked(ticker15minAgo,ticker20minAgo,lag1min,no) {
 async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
   try {
     const currentTicker = await getTicker();
-    const priceHikeThreshold = 12; // Percentage threshold for considering a price hike
-    const combineHikeThreshold = 17;
+    const priceHikeThreshold = 16; // Percentage threshold for considering a price hike
+    const combineHikeThreshold = 18;
     let coinsWithHike = [];
     let coinsFailedHike = [];
     let prevChangePerc = 0;
@@ -64,7 +64,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
         let prev20minPrice = parseFloat(coin20minAgo.last_price);
         let prev10minDeltaPerc = ((previousPrice - prev20minPrice)/prev20minPrice) *100; 
         price20minBack = prev20minPrice;
-        if(prev10minDeltaPerc >= 4) 
+        if(prev10minDeltaPerc >= 3) 
           prevChangePerc = prev10minDeltaPerc;
           else
           prevChangePerc = 0;
@@ -156,8 +156,8 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
       else{
         const result =await isSingleMinHike(coinsWithHike[0]);
         if(result){
-          sendLogs(`id: ${id} ${getTime()} Single Min Hiked, recommended return...`);
-          console.log(`id: ${id} ${getTime()} Single Min Hiked, recommended return...`);
+          sendLogs(`id: ${id} ${getTime()}:For Coin ${coinsWithHike[0].symbol} : Single Min Hiked, recommended return...`);
+          console.log(`id: ${id} ${getTime()} For Coin ${coinsWithHike[0].symbol} Single Min Hiked, recommended return...`);
           // return;
         }
       sendLogs(`id: ${id} ${getTime()}: virtual Coin: ${coinsWithHike[0].symbol} bought at ${ticker1minBack.last_price}. Preparing to sell`)
@@ -286,20 +286,24 @@ async function isSingleMinHike(coinToMonitor) {
   return true;
 
   let lastCandles=await getLastCandles(pair);
-  lastCandles=lastCandles.slice(0,5);
+  lastCandles=lastCandles.slice(0,9);
 
   const priceChange = coinToMonitor.currentPrice - coinToMonitor.previousPrice;
 
   let cnt=0;
   for(const coinDetails of lastCandles){
-    let open=coinDetails.open;
-    let close=coinDetails.close;
-    let changePerc= ((close - open)/priceChange) * 100;
-    // console.log(`changePerc ${changePerc}`);
     if(coinDetails.volume == 0){
       sendLogs(`id: ${id} ${getTime()}: in singleMinHike volume == 0`);
       return true;
     }
+  }
+  lastCandles=lastCandles.slice(0,4);
+
+  for(const coinDetails of lastCandles){
+    let open=coinDetails.open;
+    let close=coinDetails.close;
+    let changePerc= ((close - open)/priceChange) * 100;
+    // console.log(`changePerc ${changePerc}`);
     if (changePerc > 60 && cnt==0){ // current min is increasing 
       sendLogs(`id: ${id} ${getTime()}: in singleMinHike changePerc > 60 && cnt==0`);
      return false;
