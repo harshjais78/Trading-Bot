@@ -158,7 +158,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
         if(result){
           sendLogs(`id: ${id} ${getTime()}:For Coin ${coinsWithHike[0].symbol} : Single Min Hiked, recommended return...`);
           console.log(`id: ${id} ${getTime()} For Coin ${coinsWithHike[0].symbol} Single Min Hiked, recommended return...`);
-          // return;
+          return;
         }
       sendLogs(`id: ${id} ${getTime()}: virtual Coin: ${coinsWithHike[0].symbol} bought at ${ticker1minBack.last_price}. Preparing to sell`)
       console.log(`virtual Coin: ${coinsWithHike[0].symbol} bought at ${ticker1minBack.last_price} preparing to sell`);
