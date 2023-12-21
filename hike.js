@@ -293,7 +293,7 @@ async function isSingleMinHike(coinToMonitor) {
   let cnt=0;
   for(const coinDetails of lastCandles){
     if(coinDetails.volume == 0){
-      sendLogs(`id: ${id} ${getTime()}: in singleMinHike volume == 0`);
+      sendLogs(`id: ${id} ${getTime()}: in singleMinHike volume == ${coinDetails.volume}`);
       return true;
     }
   }
