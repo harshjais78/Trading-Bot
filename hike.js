@@ -180,7 +180,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
 
     console.log('No coin met the criteria of sudden hike')
     sendLogs(`id: ${id} ${getTime()}: No coin met the criteria of sudden hike`);
-    sendLogs(`id: ${id} ${getTime()}: Max reached alone: ${JSON.stringify(Object.entries(coinsFailedHike).slice(0, 4))} Max reached combined: ${JSON.stringify(Object.entries(coinsFailedHike2).slice(0, 5))}`);
+    sendLogs(`id: ${id} ${getTime()}: Max reached alone: ${JSON.stringify(Object.entries(coinsFailedHike).slice(0, 3))} Max reached combined: ${JSON.stringify(Object.entries(coinsFailedHike2).slice(0, 2))}`);
   }
 
   } catch (error) {
