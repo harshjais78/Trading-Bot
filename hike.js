@@ -92,8 +92,11 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
       if (previousPrice) {
         const currentPrice = parseFloat(currentCoin.last_price);
         const priceChangePercent = ((currentPrice - previousPrice) / previousPrice) * 100;
-
-        if (priceChangePercent >= priceHikeThreshold || priceChangePercent+prevChangePerc >=combineHikeThreshold) { 
+         // current should be increasing
+         // sendLogs(`id: ${id} ${getTime()} current candle priceChangePercent: ${priceChangePercent}`);
+         
+         
+        if (priceChangePercent >= priceHikeThreshold || ( priceChangePercent + prevChangePerc >= combineHikeThreshold && priceChangePercent > 1 ))) { 
           coinsWithHike.push({
             symbol,
             priceChangePercent,
@@ -129,12 +132,26 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
     if(coinsWithHike.length > 0) {
     // Sort coins by price change percentage in descending order
     coinsWithHike.sort((a, b) => b.priceChangePercent - a.priceChangePercent);
-   
 
-    let incTicker = lag1min;
     console.log(`id: ${id} ${getTime()}: Coins with Price Hike (>20%): ${JSON.stringify(coinsWithHike)}`);
     sendLogs(`id: ${id} ${getTime()}: Coins with Price Hike (>20%): ${JSON.stringify(coinsWithHike)}`)
+     
+     await sleep(30 * 1000);
+     let secFurtherList= await getTicker();
+     
+    for (const secFurther of secFurtherList) {
+     if (secFurther.market === coinsWithHike[0].symbol) {
+     let delta = (parseFloat(coinsWithHike[0].price) - parseFloat(secFurther.last_price)) / parseFloat(secFurther.last_price) * 100;
 
+     if (delta < 1) {
+      sendLogs(`id: ${id} ${getTime()} second candle's first 30sec delta: ${delta}, returning...`);
+      return;
+    }
+      break;
+  }
+}
+    let incTicker = lag1min;
+    
     while (isPriceEqual(incTicker, coinsWithHike[0])) {
       await sleep(2000);
       incTicker = await getTicker();
