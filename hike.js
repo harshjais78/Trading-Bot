@@ -141,7 +141,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
      
     for (const secFurther of secFurtherList) {
      if (secFurther.market === coinsWithHike[0].symbol) {
-     let delta = (parseFloat(coinsWithHike[0].price) - parseFloat(secFurther.last_price)) / parseFloat(secFurther.last_price) * 100;
+     let delta = (parseFloat(coinsWithHike[0].currentPrice) - parseFloat(secFurther.last_price)) / parseFloat(secFurther.last_price) * 100;
 
      if (delta < 1) {
       sendLogs(`id: ${id} ${getTime()} second candle's first 30sec delta: ${delta}, returning...`);
@@ -165,7 +165,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
 
     incTicker.forEach(async (ticker1minBack)=> {
      if(ticker1minBack.market == coinsWithHike[0].symbol){
-      let delta =(parseFloat(coinsWithHike[0].price) - parseFloat(ticker1minBack.last_price)) /parseFloat(ticker1minBack.last_price) * 100;
+      let delta =(parseFloat(coinsWithHike[0].currentPrice) - parseFloat(ticker1minBack.last_price)) /parseFloat(ticker1minBack.last_price) * 100;
      
       if( delta < -5 ){
       // if coins value is decreased more than 5% then, most porbably coins will decrease further.
