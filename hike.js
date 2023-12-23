@@ -96,7 +96,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
          // sendLogs(`id: ${id} ${getTime()} current candle priceChangePercent: ${priceChangePercent}`);
          
          
-        if (priceChangePercent >= priceHikeThreshold || ( priceChangePercent + prevChangePerc >= combineHikeThreshold && priceChangePercent > 1 ))) { 
+        if (priceChangePercent >= priceHikeThreshold || ( priceChangePercent + prevChangePerc >= combineHikeThreshold && priceChangePercent > 1 )) { 
           coinsWithHike.push({
             symbol,
             priceChangePercent,
