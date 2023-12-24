@@ -148,7 +148,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
       return;
     }
       else
-      sendLogs(`id: ${id} ${getTime()} second candle's first 30sec delta: ${delta}`);
+      sendLogs(`id: ${id} ${getTime()} second candle's first 30sec delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}`);
     
       break;
   }
