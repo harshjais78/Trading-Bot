@@ -144,7 +144,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
      let delta = (parseFloat(coinsWithHike[0].currentPrice) - parseFloat(secFurther.last_price)) / parseFloat(secFurther.last_price) * 100;
 
      if (delta < 1) {
-      sendLogs(`id: ${id} ${getTime()} second candle's first 30sec delta: ${delta}, returning...`);
+      sendLogs(`id: ${id} ${getTime()} second candle's first 30sec delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}, returning...`);
       return;
     }
       else
