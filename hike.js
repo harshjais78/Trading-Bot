@@ -147,15 +147,16 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
       sendLogs(`id: ${id} ${getTime()} second candle's first 30sec delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}, returning...`);
       return;
     }
-      else
+      else{
       sendLogs(`id: ${id} ${getTime()} second candle's first 30sec delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}`);
-    
+       coinsWithHike[0] = parseFloat(secFurther.last_price);
+      }
       break;
   }
 }
-    let incTicker = lag1min;
+    let incTicker = secFurtherList;
     
-    while (isPriceEqual(incTicker, coinsWithHike[0])) {
+    while (isPriceEqual(incTicker, coinsWithHike[0]) && false) {
       await sleep(2000);
       incTicker = await getTicker();
       console.log('Checking again...');
@@ -183,7 +184,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
       sendLogs(`id: ${id} ${getTime()}: virtual Coin: ${coinsWithHike[0].symbol} bought at ${ticker1minBack.last_price}. Preparing to sell`)
       console.log(`virtual Coin: ${coinsWithHike[0].symbol} bought at ${ticker1minBack.last_price} preparing to sell`);
       //buy at current market
-      coinsWithHike[0].price=ticker1minBack.last_price;
+      coinsWithHike[0].currentPrice=ticker1minBack.last_price;
       greedySell(coinsWithHike[0]);
     }
     return;
@@ -211,8 +212,9 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
 
 async function greedySell(coinsWithHike){
   try {
-  const boughtPrice=coinsWithHike.price;
+  const boughtPrice=coinsWithHike.currentPrice;
   const symbol=coinsWithHike.symbol;
+   sendLogs(coinsWithHike.price);
 
   var maxPrice = parseFloat(boughtPrice);
   console.log(maxPrice);
