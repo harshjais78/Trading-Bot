@@ -41,7 +41,7 @@ export async function coinHiked(ticker15minAgo,ticker20minAgo,lag1min,no) {
 async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
   try {
     const currentTicker = await getTicker();
-    const priceHikeThreshold = 16; // Percentage threshold for considering a price hike
+    const priceHikeThreshold = 5; // Percentage threshold for considering a price hike
     const combineHikeThreshold = 18;
     let coinsWithHike = [];
     let coinsFailedHike = [];
@@ -162,12 +162,12 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
       console.log('Checking again...');
     }
 
-    sendLogs(`id: ${id} ${getTime()}: Price is not same ${secFurtherList}`);
+    sendLogs(`id: ${id} ${getTime()}: coins WH: ${coinsWithHike[0].symbol} Price is not same ${JSON.stringify(secFurtherList)}`);
 
     incTicker.forEach(async (ticker1minBack)=> {
      if(ticker1minBack.market == coinsWithHike[0].symbol){
       let delta =(parseFloat(coinsWithHike[0].currentPrice) - parseFloat(ticker1minBack.last_price)) /parseFloat(ticker1minBack.last_price) * 100;
-     
+     sendLogs(`id: ${id} ${getTime()}: delta:${delta} came inside for each`};
       if( delta < -5 ){
       // if coins value is decreased more than 5% then, most porbably coins will decrease further.
       console.log('Price started to dec');
