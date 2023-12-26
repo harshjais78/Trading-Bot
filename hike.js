@@ -214,7 +214,7 @@ async function greedySell(coinsWithHike){
   try {
   const boughtPrice=coinsWithHike.currentPrice;
   const symbol=coinsWithHike.symbol;
-   sendLogs(coinsWithHike.price);
+   sendLogs(coinsWithHike[0].currentPrice);
 
   var maxPrice = parseFloat(boughtPrice);
   console.log(maxPrice);
