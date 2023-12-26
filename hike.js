@@ -149,7 +149,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
     }
       else{
       sendLogs(`id: ${id} ${getTime()} second candle's first 30sec delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}`);
-       coinsWithHike[0] = parseFloat(secFurther.last_price);
+       coinsWithHike[0].currentPrice = parseFloat(secFurther.last_price);
       }
       break;
   }
@@ -162,12 +162,12 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
       console.log('Checking again...');
     }
 
-    sendLogs(`id: ${id} ${getTime()}: coins WH: ${coinsWithHike[0].symbol} Price is not same ${JSON.stringify(secFurtherList)}`);
+    // sendLogs(`id: ${id} ${getTime()}: coins WH: ${coinsWithHike[0].symbol} Price is not same ${JSON.stringify(secFurtherList)}`);
 
     incTicker.forEach(async (ticker1minBack)=> {
      if(ticker1minBack.market == coinsWithHike[0].symbol){
       let delta =(parseFloat(coinsWithHike[0].currentPrice) - parseFloat(ticker1minBack.last_price)) /parseFloat(ticker1minBack.last_price) * 100;
-     sendLogs(`id: ${id} ${getTime()}: delta:${delta} came inside for each`);
+    // sendLogs(`id: ${id} ${getTime()}: delta:${delta} came inside for each`);
       if( delta < -5 ){
       // if coins value is decreased more than 5% then, most porbably coins will decrease further.
       console.log('Price started to dec');
