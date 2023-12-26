@@ -41,7 +41,7 @@ export async function coinHiked(ticker15minAgo,ticker20minAgo,lag1min,no) {
 async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
   try {
     const currentTicker = await getTicker();
-    const priceHikeThreshold = 5; // Percentage threshold for considering a price hike
+    const priceHikeThreshold = 16; // Percentage threshold for considering a price hike
     const combineHikeThreshold = 18;
     let coinsWithHike = [];
     let coinsFailedHike = [];
@@ -143,7 +143,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
      if (secFurther.market === coinsWithHike[0].symbol) {
      let delta = (parseFloat(secFurther.last_price)- parseFloat(coinsWithHike[0].currentPrice)) / parseFloat(coinsWithHike[0].currentPrice) * 100;
 
-     if (delta < 1 && false) {
+     if (delta < 1 ) {
       sendLogs(`id: ${id} ${getTime()} second candle's first 30sec delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}, returning...`);
       return;
     }
