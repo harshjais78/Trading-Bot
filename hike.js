@@ -162,7 +162,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
       console.log('Checking again...');
     }
 
-    sendLogs(`id: ${id} ${getTime()}: Price is not same`);
+    sendLogs(`id: ${id} ${getTime()}: Price is not same ${secFurtherList}`);
 
     incTicker.forEach(async (ticker1minBack)=> {
      if(ticker1minBack.market == coinsWithHike[0].symbol){
