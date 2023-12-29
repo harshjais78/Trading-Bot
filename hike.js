@@ -140,7 +140,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
      sendLogs(`id: ${id} ${getTime()} isStillinc= ${isStillinc}`);
      if (! isStillinc ){
       sendLogs(`id: ${id} ${getTime()} second candle's first 30sec returned false, returning...`);
-    //  return;
+      return;
      }
      
     
@@ -246,7 +246,7 @@ async function greedySell(coinsWithHike){
           sendLogs(`id: ${id} ${getTime()}: For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
           console.log(`For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice} Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
           sendLogs(`id: ${id} ${getTime()}:----------------------------------------------------------`);
-          //sendEmail(`From Hike, for coin: ${symbol}, \nBought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% `)
+          sendEmail(`From Hike, for coin: ${symbol}, \nBought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% `)
           
           //clear the interval
           clearInterval(intervalId);
