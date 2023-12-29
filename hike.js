@@ -41,8 +41,8 @@ export async function coinHiked(ticker15minAgo,ticker20minAgo,lag1min,no) {
 async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
   try {
     const currentTicker = await getTicker();
-    const priceHikeThreshold = 14; // Percentage threshold for considering a price hike
-    const combineHikeThreshold = 16;
+    const priceHikeThreshold = 4; // Percentage threshold for considering a price hike
+    const combineHikeThreshold = 6;
     let coinsWithHike = [];
     let coinsFailedHike = [];
     let prevChangePerc = 0;
@@ -165,7 +165,8 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
       return; // most probably coin have started to decr.
      }
       else{
-        const result =await isSingleMinHike(coinsWithHike[0]);
+        let result =await isSingleMinHike(coinsWithHike[0]);
+       sendLogs(`id: ${id} ${getTime()} result of singleminHike = ${result}`);
         if(result){
           sendLogs(`id: ${id} ${getTime()}:For Coin ${coinsWithHike[0].symbol} : Single Min Hiked, recommended return...`);
           console.log(`id: ${id} ${getTime()} For Coin ${coinsWithHike[0].symbol} Single Min Hiked, recommended return...`);
@@ -245,7 +246,7 @@ async function greedySell(coinsWithHike){
           sendLogs(`id: ${id} ${getTime()}: For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
           console.log(`For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice} Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
           sendLogs(`id: ${id} ${getTime()}:----------------------------------------------------------`);
-          sendEmail(`From Hike, for coin: ${symbol}, \nBought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% `)
+          //sendEmail(`From Hike, for coin: ${symbol}, \nBought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% `)
           
           //clear the interval
           clearInterval(intervalId);
