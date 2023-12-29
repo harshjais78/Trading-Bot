@@ -22,7 +22,7 @@ let ticker10minAgo;
 let ticker20minAgo;
 let id=1;
 hikeScheduler();  // important to run
-runOnce();
+// runOnce();
 
 
 async function hikeScheduler() {
