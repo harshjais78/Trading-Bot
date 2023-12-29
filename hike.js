@@ -76,7 +76,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
             let prev20minPrice = parseFloat(coin20minAgo.last_price);
             let prev10minDeltaPerc = ((previousPrice - prev20minPrice)/prev20minPrice) *100; 
             price20minBack = prev20minPrice;
-            if(prev10minDeltaPerc >= 4) 
+            if(prev10minDeltaPerc >= 2 ) 
               prevChangePerc = prev10minDeltaPerc;
               else
               prevChangePerc = 0;
@@ -136,7 +136,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
     console.log(`id: ${id} ${getTime()}: Coins with Price Hike (>20%): ${JSON.stringify(coinsWithHike)}`);
     sendLogs(`id: ${id} ${getTime()}: Coins with Price Hike (>20%): ${JSON.stringify(coinsWithHike)}`)
 
-     let isStillinc = isStillIncr(coinsWithHike);
+     let isStillinc = await isStillIncr(coinsWithHike);
      sendLogs(`id: ${id} ${getTime()} isStillinc= ${isStillinc}`);
      if (! isStillinc ){
       sendLogs(`id: ${id} ${getTime()} second candle's first 30sec returned false, returning...`);
