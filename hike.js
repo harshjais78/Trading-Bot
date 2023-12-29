@@ -140,7 +140,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
      sendLogs(`id: ${id} ${getTime()} isStillinc= ${isStillinc}`);
      if (! isStillinc ){
       sendLogs(`id: ${id} ${getTime()} second candle's first 30sec returned false, returning...`);
-      return;
+    //  return;
      }
      
     
