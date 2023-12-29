@@ -137,6 +137,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
     sendLogs(`id: ${id} ${getTime()}: Coins with Price Hike (>20%): ${JSON.stringify(coinsWithHike)}`)
 
      let isStillinc = isStillIncr(coinsWithHike);
+     sendLogs(`id: ${id} ${getTime()} isStillinc= ${isStillinc}`);
      if (! isStillinc ){
       sendLogs(`id: ${id} ${getTime()} second candle's first 30sec returned false, returning...`);
       return;
