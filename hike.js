@@ -135,26 +135,15 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
 
     console.log(`id: ${id} ${getTime()}: Coins with Price Hike (>20%): ${JSON.stringify(coinsWithHike)}`);
     sendLogs(`id: ${id} ${getTime()}: Coins with Price Hike (>20%): ${JSON.stringify(coinsWithHike)}`)
-     
-     await sleep(30 * 1000);
-     let secFurtherList= await getTicker();
-     
-    for (const secFurther of secFurtherList) {
-     if (secFurther.market === coinsWithHike[0].symbol) {
-     let delta = (parseFloat(secFurther.last_price)- parseFloat(coinsWithHike[0].currentPrice)) / parseFloat(coinsWithHike[0].currentPrice) * 100;
 
-     if (delta < 1 ) {
-      sendLogs(`id: ${id} ${getTime()} second candle's first 30sec delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}, returning...`);
+     let isStillinc = isStillIncr(coinsWithHike);
+     if (! isStillinc ){
+      sendLogs(`id: ${id} ${getTime()} second candle's first 30sec returned false, returning...`);
       return;
-    }
-      else{
-      sendLogs(`id: ${id} ${getTime()} second candle's first 30sec delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}`);
-       coinsWithHike[0].currentPrice = parseFloat(secFurther.last_price);
-      }
-      break;
-  }
-}
-    let incTicker = secFurtherList;
+     }
+     
+    
+    let incTicker = await getTicker(); // need update
     
     while (isPriceEqual(incTicker, coinsWithHike[0]) && false) {
       await sleep(2000);
@@ -344,6 +333,31 @@ async function getLastCandles(coinName){
         console.error('An error occurred:', error);
         throw error; 
       });
+}
+
+async function isStillIncr( coinsWithHike ){
+ for ( let i=0; i<10; i++ ){
+     await sleep(3 * 1000);
+     let secFurtherList= await getTicker();
+     
+    for (const secFurther of secFurtherList) {
+     if (secFurther.market === coinsWithHike[0].symbol) {
+     let delta = (parseFloat(secFurther.last_price)- parseFloat(coinsWithHike[0].currentPrice)) / parseFloat(coinsWithHike[0].currentPrice) * 100;
+
+     if (delta >= 1 ) {
+     // sendLogs(`id: ${id} ${getTime()} second candle's first 30sec delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}, returning...`);
+      sendLogs(`id: ${id} ${getTime()} second candle's first ${i} loop delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}`);
+       coinsWithHike[0].currentPrice = parseFloat(secFurther.last_price);
+      return true;
+      }
+      break;
+  }
+    }
+
+ }
+ return false;
+
+
 }
 
 
