@@ -352,6 +352,9 @@ async function isStillIncr( coinsWithHike ){
        coinsWithHike[0].currentPrice = parseFloat(secFurther.last_price);
       return true;
       }
+      if (i == 9 ){
+       sendLogs(`id: ${id} ${getTime()} second candle's first ${i} loop delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}, returning`);
+      }
       break;
   }
     }
