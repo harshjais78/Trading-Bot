@@ -43,6 +43,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
     const currentTicker = await getTicker();
     const priceHikeThreshold = 14; // Percentage threshold for considering a price hike
     const combineHikeThreshold = 16;
+    const recheckThreshold = 9;
     let coinsWithHike = [];
     let coinsFailedHike = [];
     let prevChangePerc = 0;
@@ -105,7 +106,15 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
             previousPrice,
             price20minBack,
           });
-        }else{
+        }
+        else if(priceChangePercent >= recheckThreshold){
+         setTimeout(() => {
+         sendLogs(`id: ${id} ${getTime()} running after Timeout for coin: ${symbol}`);
+          id= id+'##';
+         checkPriceHike(previousData,ticker20minAgo,lag1min)
+       }, 1000 * 2 * 60);
+        }
+        else{
           coinsFailedHike.push({
             symbol,
             curr10minDeltaPerc: priceChangePercent,
