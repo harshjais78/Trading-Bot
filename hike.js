@@ -34,11 +34,11 @@ export async function coinHiked(ticker15minAgo,ticker20minAgo,lag1min,no) {
   id=no;
   if(ticker15minAgo == undefined) 
    return ;
-  checkPriceHike(ticker15minAgo,ticker20minAgo,lag1min);
+  checkPriceHike(ticker15minAgo,ticker20minAgo,lag1min, true);
 }
 
 
-async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
+async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranch) {
   try {
     const currentTicker = await getTicker();
     const priceHikeThreshold = 14; // Percentage threshold for considering a price hike
@@ -107,11 +107,11 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min) {
             price20minBack,
           });
         }
-        else if(priceChangePercent >= recheckThreshold){
+        else if(priceChangePercent >= recheckThreshold && canCheckBranch ){
          setTimeout(() => {
          sendLogs(`id: ${id} ${getTime()} running after Timeout for coin: ${symbol}`);
           id= id+'##';
-         checkPriceHike(previousData,ticker20minAgo,lag1min)
+         checkPriceHike(previousData,ticker20minAgo,lag1min, false);
        }, 1000 * 2 * 60);
         }
         else{
