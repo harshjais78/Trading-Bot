@@ -179,7 +179,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
         if(result){
           sendLogs(`id: ${id} ${getTime()}:For Coin ${coinsWithHike[0].symbol} : Single Min Hiked, recommended return...`);
           console.log(`id: ${id} ${getTime()} For Coin ${coinsWithHike[0].symbol} Single Min Hiked, recommended return...`);
-          // return;
+          return;
         }
       sendLogs(`id: ${id} ${getTime()}: virtual Coin: ${coinsWithHike[0].symbol} bought at ${ticker1minBack.last_price}. Preparing to sell`)
       console.log(`virtual Coin: ${coinsWithHike[0].symbol} bought at ${ticker1minBack.last_price} preparing to sell`);
@@ -251,6 +251,8 @@ async function greedySell(coinsWithHike){
         if (priceChangePercent <= -2) {
           //sell coin and replace sold coin price with currentPrice
           const percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
+          if ( percentageEarned > 0 || percentageEarned < -7){
+          
 
           sendLogs(`id: ${id} ${getTime()}: For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
           console.log(`For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice} Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
@@ -259,6 +261,7 @@ async function greedySell(coinsWithHike){
           
           //clear the interval
           clearInterval(intervalId);
+          }
         }
         }
       }
