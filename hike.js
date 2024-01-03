@@ -263,6 +263,9 @@ async function greedySell(coinsWithHike){
           //clear the interval
           clearInterval(intervalId);
           }
+         else{
+          sendLogs(`id: ${id} ${getTime()} trying to sell, pending Percentage Earned: ${percentageEarned}`};
+         }
         }
         }
       }
