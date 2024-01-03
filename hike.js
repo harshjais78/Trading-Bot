@@ -111,6 +111,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
          setTimeout(() => {
          sendLogs(`id: ${id} ${getTime()} running after Timeout for coin: ${symbol}`);
           id= id+'##';
+          canCheckBranch = false;
          checkPriceHike(previousData,ticker20minAgo,lag1min, false);
        }, 1000 * 2 * 60);
         }
