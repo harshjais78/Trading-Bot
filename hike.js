@@ -108,10 +108,10 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
           });
         }
         else if(priceChangePercent >= recheckThreshold && canCheckBranch ){
+         canCheckBranch = false;
          setTimeout(() => {
          sendLogs(`id: ${id} ${getTime()} running after Timeout for coin: ${symbol}`);
           id= id+'##';
-          canCheckBranch = false;
          checkPriceHike(previousData,ticker20minAgo,lag1min, false);
        }, 1000 * 2 * 60);
         }
