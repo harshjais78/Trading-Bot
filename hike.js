@@ -146,53 +146,9 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
     console.log(`id: ${id} ${getTime()}: Coins with Price Hike (>20%): ${JSON.stringify(coinsWithHike)}`);
     sendLogs(`id: ${id} ${getTime()}: Coins with Price Hike (>20%): ${JSON.stringify(coinsWithHike)}`)
 
-     let isStillinc = await isStillIncr(coinsWithHike);
-     sendLogs(`id: ${id} ${getTime()} isStillinc= ${isStillinc}`);
-     if (! isStillinc ){
-      sendLogs(`id: ${id} ${getTime()} second candle's first 30sec returned false, returning...`);
-      return;
+    for(let i = 0; i < coinsWithHike.length; i++){
+      checkAndBuy(coinsWithHike,i);
      }
-     
-    
-    let incTicker = await getTicker(); // need update
-    
-    while (isPriceEqual(incTicker, coinsWithHike[0]) && false) {
-      await sleep(2000);
-      incTicker = await getTicker();
-      console.log('Checking again...');
-    }
-
-    // sendLogs(`id: ${id} ${getTime()}: coins WH: ${coinsWithHike[0].symbol} Price is not same ${JSON.stringify(secFurtherList)}`);
-
-    incTicker.forEach(async (ticker1minBack)=> {
-     if(ticker1minBack.market == coinsWithHike[0].symbol){
-      let delta =(parseFloat(coinsWithHike[0].currentPrice) - parseFloat(ticker1minBack.last_price)) /parseFloat(ticker1minBack.last_price) * 100;
-    // sendLogs(`id: ${id} ${getTime()}: delta:${delta} came inside for each`);
-      if( delta < -5 ){
-      // if coins value is decreased more than 5% then, most porbably coins will decrease further.
-      console.log('Price started to dec');
-      sendLogs(`id: ${id} ${getTime()}: Price started to dec. delta value: ${delta}`)
-      return; // most probably coin have started to decr.
-     }
-      else{
-        let result =await isSingleMinHike(coinsWithHike[0]);
-       sendLogs(`id: ${id} ${getTime()} result of singleminHike = ${result}`);
-        if(result){
-          sendLogs(`id: ${id} ${getTime()}:For Coin ${coinsWithHike[0].symbol} : Single Min Hiked, recommended return...`);
-          console.log(`id: ${id} ${getTime()} For Coin ${coinsWithHike[0].symbol} Single Min Hiked, recommended return...`);
-          return;
-        }
-      sendLogs(`id: ${id} ${getTime()}: virtual Coin: ${coinsWithHike[0].symbol} bought at ${ticker1minBack.last_price}. Preparing to sell`)
-      console.log(`virtual Coin: ${coinsWithHike[0].symbol} bought at ${ticker1minBack.last_price} preparing to sell`);
-      //buy at current market
-      coinsWithHike[0].currentPrice=ticker1minBack.last_price;
-      greedySell(coinsWithHike[0]);
-    }
-    return;
-    }
-
-    });
-
     }
     else{
       // send log for both type of comparisons
@@ -210,6 +166,54 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
   }
 }
 
+async function checkAndBuy(coinsWithHike,i){
+  let isStillinc = await isStillIncr(coinsWithHike[i]);
+  sendLogs(`id: ${id} ${getTime()} isStillinc= ${isStillinc}`);
+  if (! isStillinc ){
+   sendLogs(`id: ${id} ${getTime()} second candle's first 30sec returned false, returning...`);
+   return;
+  }
+  
+ 
+ let incTicker = await getTicker(); // need update
+ 
+ while (isPriceEqual(incTicker, coinsWithHike[i]) && false) {
+   await sleep(2000);
+   incTicker = await getTicker();
+   console.log('Checking again...');
+ }
+
+ // sendLogs(`id: ${id} ${getTime()}: coins WH: ${coinsWithHike[i].symbol} Price is not same ${JSON.stringify(secFurtherList)}`);
+
+ incTicker.forEach(async (ticker1minBack)=> {
+  if(ticker1minBack.market == coinsWithHike[i].symbol){
+   let delta =(parseFloat(coinsWithHike[i].currentPrice) - parseFloat(ticker1minBack.last_price)) /parseFloat(ticker1minBack.last_price) * 100;
+ // sendLogs(`id: ${id} ${getTime()}: delta:${delta} came inside for each`);
+   if( delta < -5 ){
+   // if coins value is decreased more than 5% then, most porbably coins will decrease further.
+   console.log('Price started to dec');
+   sendLogs(`id: ${id} ${getTime()}: Price started to dec. delta value: ${delta}`)
+   return; // most probably coin have started to decr.
+  }
+   else{
+     let result =await isSingleMinHike(coinsWithHike[i]);
+    sendLogs(`id: ${id} ${getTime()} result of singleminHike = ${result}`);
+     if(result){
+       sendLogs(`id: ${id} ${getTime()}:For Coin ${coinsWithHike[i].symbol} : Single Min Hiked, recommended return...`);
+       console.log(`id: ${id} ${getTime()} For Coin ${coinsWithHike[i].symbol} Single Min Hiked, recommended return...`);
+       return;
+     }
+   sendLogs(`id: ${id} ${getTime()}: virtual Coin: ${coinsWithHike[i].symbol} bought at ${ticker1minBack.last_price}. Preparing to sell`)
+   console.log(`virtual Coin: ${coinsWithHike[i].symbol} bought at ${ticker1minBack.last_price} preparing to sell`);
+   //buy at current market
+   coinsWithHike[i].currentPrice=ticker1minBack.last_price;
+   greedySell(coinsWithHike[i]);
+ }
+ return;
+ }
+
+ });
+}
 
 async function greedySell(coinsWithHike){
   try {
@@ -264,7 +268,7 @@ async function greedySell(coinsWithHike){
           clearInterval(intervalId);
           }
          else{
-          sendLogs(`id: ${id} ${getTime()} trying to sell, pending Percentage Earned: ${percentageEarned}`);
+          sendLogs(`id: ${id} ${getTime()} trying to sell coin: ${symbol}, pending Percentage Earned: ${percentageEarned}`);
          }
         }
         }
@@ -359,13 +363,13 @@ async function isStillIncr( coinsWithHike ){
      let secFurtherList= await getTicker();
      
     for (const secFurther of secFurtherList) {
-     if (secFurther.market === coinsWithHike[0].symbol) {
-     let delta = (parseFloat(secFurther.last_price)- parseFloat(coinsWithHike[0].currentPrice)) / parseFloat(coinsWithHike[0].currentPrice) * 100;
+     if (secFurther.market === coinsWithHike.symbol) {
+     let delta = (parseFloat(secFurther.last_price)- parseFloat(coinsWithHike.currentPrice)) / parseFloat(coinsWithHike.currentPrice) * 100;
 
      if (delta >= 1 ) {
      // sendLogs(`id: ${id} ${getTime()} second candle's first 30sec delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}, returning...`);
       sendLogs(`id: ${id} ${getTime()} second candle's first ${i} loop delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}`);
-       coinsWithHike[0].currentPrice = parseFloat(secFurther.last_price);
+       coinsWithHike.currentPrice = parseFloat(secFurther.last_price);
       return true;
       }
       if (i == 9 ){
