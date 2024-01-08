@@ -222,6 +222,7 @@ async function greedySell(coinsWithHike){
 
   var maxPrice = parseFloat(boughtPrice);
   console.log(maxPrice);
+  let cnt = 0;
 
   // Fetch ticker data every 3 seconds
   const intervalId = setInterval(async (id) => {
@@ -256,7 +257,7 @@ async function greedySell(coinsWithHike){
         if (priceChangePercent <= -2) {
           //sell coin and replace sold coin price with currentPrice
           const percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
-          if ( percentageEarned > 0 || percentageEarned < -7){
+          if ( percentageEarned > 0 || percentageEarned < -7 || cnt == 21){
           
 
           sendLogs(`id: ${id} ${getTime()}: For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
@@ -268,8 +269,9 @@ async function greedySell(coinsWithHike){
           clearInterval(intervalId);
           }
          else{
-          sendLogs(`id: ${id} ${getTime()} trying to sell coin: ${symbol}, pending Percentage Earned: ${percentageEarned}`);
-         }
+          sendLogs(`id: ${id} ${getTime()} trying to sell coin: ${symbol} cnt: ${cnt}, pending Percentage Earned: ${percentageEarned}`);
+          cnt++;
+        }
         }
         }
       }
