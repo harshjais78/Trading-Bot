@@ -164,19 +164,19 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
       if(id.includes('##')){
     setTimeout(() => {
       sendLogs(`id: ${id} ${getTime()} running after Timeout`);
-       id= id+'##$';
+       id= id+'$';
       checkPriceHike(previousData,ticker20minAgo,lag1min, false);
     }, 1000 * 30);
   }else if(id.includes('##$')){
     setTimeout(() => {
       sendLogs(`id: ${id} ${getTime()} running after Timeout`);
-       id= id+'##$$';
+       id= id+'$';
       checkPriceHike(previousData,ticker20minAgo,lag1min, false);
     }, 1000 * 30);
   }else{
     setTimeout(() => {
       sendLogs(`id: ${id} ${getTime()} running after Timeout`);
-       id= id+'##';
+       id= id+'#';
       checkPriceHike(previousData,ticker20minAgo,lag1min, false);
     }, 1000 * 30);
   }
@@ -205,12 +205,9 @@ async function checkAndBuy(coinsWithHike,i){
    console.log('Checking again...');
  }
 
- // sendLogs(`id: ${id} ${getTime()}: coins WH: ${coinsWithHike[i].symbol} Price is not same ${JSON.stringify(secFurtherList)}`);
-
  incTicker.forEach(async (ticker1minBack)=> {
   if(ticker1minBack.market == coinsWithHike[i].symbol){
    let delta =(parseFloat(coinsWithHike[i].currentPrice) - parseFloat(ticker1minBack.last_price)) /parseFloat(ticker1minBack.last_price) * 100;
- // sendLogs(`id: ${id} ${getTime()}: delta:${delta} came inside for each`);
    if( delta < -5 ){
    // if coins value is decreased more than 5% then, most porbably coins will decrease further.
    console.log('Price started to dec');
@@ -246,18 +243,20 @@ async function greedySell(coinsWithHike){
   console.log(maxPrice);
   let cnt = 0;
   let cntLoss=0;
+  let cntLossRestore=0;
+  let _id=id;
 
   // Fetch ticker data every 3 seconds
-  const intervalId = setInterval(async (id) => {
+  const intervalId = setInterval(async () => {
     try {
       const tickerData = await getTicker(symbol);
+      let currentPrice;
+      cnt++;
 
       if (!tickerData) {
         console.error(`Ticker data not available for ${symbol}`);
         return;
       }
-
-      let currentPrice;
 
       // run at every 3 seconds
       tickerData.forEach((currentTicker)=> {
@@ -267,7 +266,6 @@ async function greedySell(coinsWithHike){
       }
       });
 
-      console.log(currentPrice,maxPrice);
       if (currentPrice != undefined) {
 
         if (currentPrice >= maxPrice) {
@@ -280,26 +278,30 @@ async function greedySell(coinsWithHike){
         if (priceChangePercent <= -2) {
           //sell coin and replace sold coin price with currentPrice
           const percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
-          if ( percentageEarned > 3 || percentageEarned < -8 ){
+          if ( percentageEarned > 3 || percentageEarned <= -8 ){
 
-            if(percentageEarned < -8 && cntLoss < 50){
-              cntLoss++;              
+            if(percentageEarned <= -8 && percentageEarned > -11 ){ // wait for approx. 3 min if price remains between given cnd. then sell. 
+              cntLoss++; 
+              cntLossRestore=0;             
               
+            }
+            if(percentageEarned > 8 || cntLoss > 50 || percentageEarned < -11){
+          
+              if(cntLoss > 50 || cnt > 600  || percentageEarned < -11){
+                // sell if waited for appr. 3min bw -8 to -11 or it is more than 30 min or too much of loss
+              sell(intervalId,_id,symbol,boughtPrice,currentPrice,maxPrice,percentageEarned,cntLoss,cntLossRestore,cnt)
             }else{
-          
+              beGreedy(coinsWithHike,_id);
+              clearInterval(intervalId);
+             }
 
-          sendLogs(`id: ${id} ${getTime()}: For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
-          console.log(`For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice} Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
-          sendLogs(`id: ${id} ${getTime()}:----------------------------------------------------------`);
-          sendEmail(`From Hike, for coin: ${symbol}, \nBought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% `)
-          
-          //clear the interval
-          clearInterval(intervalId);
             }
           }
          else{
-          sendLogs(`id: ${id} ${getTime()} trying to sell coin: ${symbol} cnt: ${cnt}, pending Percentage Earned: ${percentageEarned}`);
-          // cnt++;
+          sendLogs(`id: ${_id} ${getTime()} trying to sell coin: ${symbol} cnt: ${cnt}, pending Percentage Earned: ${percentageEarned} cntLossRestore: ${cntLossRestore}`);
+          cntLossRestore++;
+          if(cntLossRestore > 4) // if price remained better than -8% atleast for 4*3 sec then restore cntLoss variable to 0 
+            cntLoss= 0;
         }
         }
         }
@@ -330,6 +332,63 @@ for (const currentTicker of incTicker) {
 return true;
 }
 
+async function beGreedy(coinsWithHike, id){
+  try {
+    const boughtPrice=coinsWithHike.currentPrice;
+    const symbol=coinsWithHike.symbol;
+    sendLogs(`id: ${id} ${getTime()} inside beGreedy`);
+  
+    var maxPrice = parseFloat(boughtPrice);
+    console.log(maxPrice);
+    let cnt = 0;
+  
+    // Fetch ticker data every 3 seconds
+    const intervalId = setInterval(async () => {
+      try {
+        const tickerData = await getTicker(symbol);
+        let currentPrice;
+        cnt++;
+
+        if (!tickerData) {
+          console.error(`Ticker data not available for ${symbol}`);
+          return;
+        }
+
+        // run at every 3 seconds
+        tickerData.forEach((currentTicker)=> {
+          if(currentTicker.market == symbol){
+           currentPrice = parseFloat(currentTicker.last_price);
+          return;
+        }
+        });
+  
+        console.log(currentPrice,maxPrice);
+        if (currentPrice != undefined) {
+  
+          if (currentPrice >= maxPrice) {
+            maxPrice = currentPrice;
+            console.log(`New max price for ${symbol}: ${maxPrice}`);
+          }
+          else{
+          const priceChangePercent = ((currentPrice - maxPrice ) / maxPrice) * 100;
+  
+          if (priceChangePercent <= -2) {
+            const percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
+            sell(intervalId,id,symbol,boughtPrice,currentPrice,maxPrice,percentageEarned,'','',cnt)  
+              }
+          
+          }
+          
+        }
+      } catch (error) {
+        console.error('An error occurred:', error);
+      }
+    }, 3000); // 3 seconds in milliseconds
+  }catch (error) {
+    console.log('An error occurred:', error);
+  }
+}
+
 
 export function getTime() {
   const nowUTC = new Date(); // Current UTC time
@@ -337,8 +396,9 @@ export function getTime() {
 
   const hours = now.getUTCHours().toString().padStart(2, '0');
   const minutes = now.getUTCMinutes().toString().padStart(2, '0');
+  const seconds = now.getUTCSeconds().toString().padStart(2, '0');
 
-  return `${hours}:${minutes}`;
+  return `${hours}:${minutes}:${seconds}`;
 }
 
 async function isSingleMinHike(coinToMonitor) {
@@ -386,6 +446,15 @@ async function getLastCandles(coinName){
         console.error('An error occurred:', error);
         throw error; 
       });
+}
+
+function sell(intervalId,id,symbol,boughtPrice,currentPrice,maxPrice,percentageEarned,cntLoss,cntLossRestore,cnt){
+  sendLogs(`id: ${id} ${getTime()}: For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% cntLoss: ${cntLoss} cntLossRestore: ${cntLossRestore} cnt: ${cnt}`);
+  console.log(`For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice} Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
+  sendLogs(`id: ${id} ${getTime()}:----------------------------------------------------------`);
+  sendEmail(`From Hike, for coin: ${symbol}, \nBought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% `)
+ //clear the interval
+ clearInterval(intervalId);
 }
 
 async function isStillIncr( coinsWithHike ){
