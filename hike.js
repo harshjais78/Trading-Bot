@@ -111,9 +111,9 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
          canCheckBranch = false;
          setTimeout(() => {
          sendLogs(`id: ${id} ${getTime()} running after Timeout for coin: ${symbol}`);
-          id= id+'##';
+          id= id+'#';
          checkPriceHike(previousData,ticker20minAgo,lag1min, false);
-       }, 1000 * 2 * 60);
+       }, 1000 * 30);
         }
         else{
           coinsFailedHike.push({
@@ -159,6 +159,28 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
     console.log('No coin met the criteria of sudden hike')
     sendLogs(`id: ${id} ${getTime()}: No coin met the criteria of sudden hike`);
     sendLogs(`id: ${id} ${getTime()}: Max reached alone: ${JSON.stringify(Object.entries(coinsFailedHike).slice(0, 3))} Max reached combined: ${JSON.stringify(Object.entries(coinsFailedHike2).slice(0, 2))}`);
+  
+    if(id.includes('#') && !id.includes('##$$')){
+      if(id.includes('##')){
+    setTimeout(() => {
+      sendLogs(`id: ${id} ${getTime()} running after Timeout for coin: ${symbol}`);
+       id= id+'##$';
+      checkPriceHike(previousData,ticker20minAgo,lag1min, false);
+    }, 1000 * 30);
+  }else if(id.includes('##$')){
+    setTimeout(() => {
+      sendLogs(`id: ${id} ${getTime()} running after Timeout for coin: ${symbol}`);
+       id= id+'##$$';
+      checkPriceHike(previousData,ticker20minAgo,lag1min, false);
+    }, 1000 * 30);
+  }else{
+    setTimeout(() => {
+      sendLogs(`id: ${id} ${getTime()} running after Timeout for coin: ${symbol}`);
+       id= id+'##';
+      checkPriceHike(previousData,ticker20minAgo,lag1min, false);
+    }, 1000 * 30);
+  }
+  }
   }
 
   } catch (error) {
