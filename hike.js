@@ -163,19 +163,19 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
     if(id.includes('#') && !id.includes('##$$')){
       if(id.includes('##')){
     setTimeout(() => {
-      sendLogs(`id: ${id} ${getTime()} running after Timeout for coin: ${symbol}`);
+      sendLogs(`id: ${id} ${getTime()} running after Timeout`);
        id= id+'##$';
       checkPriceHike(previousData,ticker20minAgo,lag1min, false);
     }, 1000 * 30);
   }else if(id.includes('##$')){
     setTimeout(() => {
-      sendLogs(`id: ${id} ${getTime()} running after Timeout for coin: ${symbol}`);
+      sendLogs(`id: ${id} ${getTime()} running after Timeout`);
        id= id+'##$$';
       checkPriceHike(previousData,ticker20minAgo,lag1min, false);
     }, 1000 * 30);
   }else{
     setTimeout(() => {
-      sendLogs(`id: ${id} ${getTime()} running after Timeout for coin: ${symbol}`);
+      sendLogs(`id: ${id} ${getTime()} running after Timeout`);
        id= id+'##';
       checkPriceHike(previousData,ticker20minAgo,lag1min, false);
     }, 1000 * 30);
@@ -245,6 +245,7 @@ async function greedySell(coinsWithHike){
   var maxPrice = parseFloat(boughtPrice);
   console.log(maxPrice);
   let cnt = 0;
+  let cntLoss=0;
 
   // Fetch ticker data every 3 seconds
   const intervalId = setInterval(async (id) => {
@@ -279,7 +280,12 @@ async function greedySell(coinsWithHike){
         if (priceChangePercent <= -2) {
           //sell coin and replace sold coin price with currentPrice
           const percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
-          if ( percentageEarned > 0 || percentageEarned < -7 || cnt == 21){
+          if ( percentageEarned > 3 || percentageEarned < -8 ){
+
+            if(percentageEarned < -8 && cntLoss < 50){
+              cntLoss++;              
+              
+            }else{
           
 
           sendLogs(`id: ${id} ${getTime()}: For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
@@ -289,10 +295,11 @@ async function greedySell(coinsWithHike){
           
           //clear the interval
           clearInterval(intervalId);
+            }
           }
          else{
           sendLogs(`id: ${id} ${getTime()} trying to sell coin: ${symbol} cnt: ${cnt}, pending Percentage Earned: ${percentageEarned}`);
-          cnt++;
+          // cnt++;
         }
         }
         }
