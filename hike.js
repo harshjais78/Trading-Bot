@@ -7,21 +7,24 @@ import { getPair, sleep } from "./util.js";
 import * as CONSTANT from './Constant.js'
 
 /*
-Target: Some coins suddenly increase by more than 100% in 2 hours.
+Target: Some coins suddenly increase by more than 100% or such in few hours/min.
 
 Logic: target coins who have increased by more than @priceHikeThreshold in 10 minutes or combining prev 2 
 candles of 10 min hike is more than 30% and also
 make sure before buying coin that price have not started to decrease by more than 6%. If it is decreased 
 don't buy otherwise buy immediately and sell.
 
-Sell: bought coins should be sell in two ways 1. limit price of about 25% and greedy way @greedySell().
+Sell: bought coins should be sell in two ways
+ 1. If I have bought right coin at right time then most probably coin will increase more than 10%. So wait for 10% profit if predicted wrong then -11% loss.
+ If coin is longer than 3 min bw -8 to -11 sell it.
+2. greedy way @beGreedy().
 In greedySell() function, idea is wait for coin to reach max price and as soon as it starts to decrease
 sell it because coins which have hiked suddenly also decrease suddenly. Observed that they mostly follow
 monotonic inc/dec. 
 
-pending:
- single min contributiing more than 60% or more than (100% or decreaseing) don't buy. 
- single min contributiing more than 60% and less than 100 and inc buy. 
+Remove:
+Case 1: Where volume is 0. becuase it could have altered by huge investors and no chance to increase further.
+case 2: If condition is met but price is not currently increasing.
 
 */
 
@@ -43,7 +46,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
     const currentTicker = await getTicker();
     const priceHikeThreshold = 14; // Percentage threshold for considering a price hike
     const combineHikeThreshold = 16;
-    const recheckThreshold = 9;
+    const recheckThreshold = 8;
     let coinsWithHike = [];
     let coinsFailedHike = [];
     let prevChangePerc = 0;
@@ -110,7 +113,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
         else if(priceChangePercent >= recheckThreshold && canCheckBranch ){
          canCheckBranch = false;
          setTimeout(() => {
-         sendLogs(`id: ${id} ${getTime()} running after Timeout for coin: ${symbol}`);
+         sendLogs(`id: ${id} ${getTime()} running after Timeout for coin: ${symbol}, price was: ${currentPrice}`);
           id= id+'#';
          checkPriceHike(previousData,ticker20minAgo,lag1min, false);
        }, 1000 * 30);
@@ -118,8 +121,8 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
         else{
           coinsFailedHike.push({
             symbol,
-            curr10minDeltaPerc: priceChangePercent,
-            combineChangePercent: (prevChangePerc+priceChangePercent),
+            curr10minDeltaPerc: priceChangePercent.toFixed(3),
+            combineChangePercent: (prevChangePerc+priceChangePercent).toFixed(3),
             currentPrice,
             previousPrice,
             price20minBack,
@@ -144,7 +147,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
     coinsWithHike.sort((a, b) => b.priceChangePercent - a.priceChangePercent);
 
     console.log(`id: ${id} ${getTime()}: Coins with Price Hike (>20%): ${JSON.stringify(coinsWithHike)}`);
-    sendLogs(`id: ${id} ${getTime()}: Coins with Price Hike (>20%): ${JSON.stringify(coinsWithHike)}`)
+    sendLogs(`id: ${id} ${getTime()}: Coins with Price Hike ***** (>${priceHikeThreshold}/${combineHikeThreshold}%): ${JSON.stringify(coinsWithHike)}`)
 
     for(let i = 0; i < coinsWithHike.length; i++){
       checkAndBuy(coinsWithHike,i);
@@ -278,16 +281,16 @@ async function greedySell(coinsWithHike){
         if (priceChangePercent <= -2) {
           //sell coin and replace sold coin price with currentPrice
           const percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
-          if ( percentageEarned > 3 || percentageEarned <= -8 ){
+          if ( percentageEarned > 3 || percentageEarned <= -8 ){  // if price is bw -8 to 3 then do nothing, hope coin to inc more than 3%
 
             if(percentageEarned <= -8 && percentageEarned > -11 ){ // wait for approx. 3 min if price remains between given cnd. then sell. 
               cntLoss++; 
               cntLossRestore=0;             
-              
             }
+
             if(percentageEarned > 8 || cntLoss > 50 || percentageEarned < -11){
           
-              if(cntLoss > 50 || cnt > 600  || percentageEarned < -11){
+              if(cntLoss > 50 || cnt > 4800  || percentageEarned < -11){
                 // sell if waited for appr. 3min bw -8 to -11 or it is more than 30 min or too much of loss
               sell(intervalId,_id,symbol,boughtPrice,currentPrice,maxPrice,percentageEarned,cntLoss,cntLossRestore,cnt)
             }else{
@@ -296,6 +299,7 @@ async function greedySell(coinsWithHike){
              }
 
             }
+            sendLogs(`id: ${_id} ${getTime()} trying to sell coin: ${symbol} cnt: ${cnt} current price: ${currentPrice} cntLoss: ${cntLoss}`);
           }
          else{
           sendLogs(`id: ${_id} ${getTime()} trying to sell coin: ${symbol} cnt: ${cnt}, pending Percentage Earned: ${percentageEarned} cntLossRestore: ${cntLossRestore}`);
@@ -375,8 +379,8 @@ async function beGreedy(coinsWithHike, id){
           if (priceChangePercent <= -2) {
             const percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
             sell(intervalId,id,symbol,boughtPrice,currentPrice,maxPrice,percentageEarned,'','',cnt)  
-              }
-          
+          }
+          sendLogs(`id: ${_id} ${getTime()} inside beGreedy current price: ${currentPrice} priceChange%: ${priceChangePercent} maxPrice: ${maxPrice}` );          
           }
           
         }
