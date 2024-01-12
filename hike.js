@@ -225,7 +225,7 @@ async function checkAndBuy(coinsWithHike,i){
        console.log(`id: ${id} ${getTime()} For Coin ${coinsWithHike[i].symbol} Single Min Hiked, recommended return...`);
        return;
      }
-   sendLogs(`id: ${id} ${getTime()}: virtual Coin: ${coinsWithHike[i].symbol} bought at ${ticker1minBack.last_price}. Preparing to sell`)
+   sendLogs(`id: ${id} ${getTime()}: +++++ virtual Coin: ${coinsWithHike[i].symbol} bought at ${ticker1minBack.last_price}. Preparing to sell`)
    console.log(`virtual Coin: ${coinsWithHike[i].symbol} bought at ${ticker1minBack.last_price} preparing to sell`);
    //buy at current market
    coinsWithHike[i].currentPrice=ticker1minBack.last_price;
@@ -276,9 +276,6 @@ async function greedySell(coinsWithHike){
           console.log(`New max price for ${symbol}: ${maxPrice}`);
         }
         else{
-        const priceChangePercent = ((currentPrice - maxPrice ) / maxPrice) * 100;
-
-        if (priceChangePercent <= -2) {
           //sell coin and replace sold coin price with currentPrice
           const percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
           if ( percentageEarned > 3 || percentageEarned <= -8 ){  // if price is bw -8 to 3 then do nothing, hope coin to inc more than 3%
@@ -290,7 +287,7 @@ async function greedySell(coinsWithHike){
 
             if(percentageEarned > 8 || cntLoss > 50 || percentageEarned < -11){
           
-              if(cntLoss > 50 || cnt > 4800  || percentageEarned < -11){
+              if(cntLoss > 50 || cnt > 10000  || percentageEarned < -11){
                 // sell if waited for appr. 3min bw -8 to -11 or it is more than 30 min or too much of loss
               sell(intervalId,_id,symbol,boughtPrice,currentPrice,maxPrice,percentageEarned,cntLoss,cntLossRestore,cnt)
             }else{
@@ -299,15 +296,17 @@ async function greedySell(coinsWithHike){
              }
 
             }
-            sendLogs(`id: ${_id} ${getTime()} trying to sell coin: ${symbol} cnt: ${cnt} current price: ${currentPrice} cntLoss: ${cntLoss}`);
+            sendLogs(`id: ${_id} ${getTime()} trying to sell coin: ${symbol} cnt: ${cnt} current price: ${currentPrice} cntLoss: ${cntLoss} Percentage Earned: ${percentageEarned}`);
           }
          else{
           sendLogs(`id: ${_id} ${getTime()} trying to sell coin: ${symbol} cnt: ${cnt}, pending Percentage Earned: ${percentageEarned} cntLossRestore: ${cntLossRestore}`);
           cntLossRestore++;
           if(cntLossRestore > 4) // if price remained better than -8% atleast for 4*3 sec then restore cntLoss variable to 0 
             cntLoss= 0;
-        }
-        }
+            if(cnt > 4800 && percentageEarned > 0){
+              beGreedy(coinsWithHike,_id)
+            }
+        } 
         }
       }
     } catch (error) {
@@ -342,7 +341,7 @@ async function beGreedy(coinsWithHike, id){
     const symbol=coinsWithHike.symbol;
     sendLogs(`id: ${id} ${getTime()} inside beGreedy`);
   
-    var maxPrice = parseFloat(boughtPrice);
+    var maxPrice =-1;
     console.log(maxPrice);
     let cnt = 0;
   
@@ -362,6 +361,8 @@ async function beGreedy(coinsWithHike, id){
         tickerData.forEach((currentTicker)=> {
           if(currentTicker.market == symbol){
            currentPrice = parseFloat(currentTicker.last_price);
+          if(maxPrice == -1)
+           maxPrice = currentPrice;
           return;
         }
         });
