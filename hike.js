@@ -285,10 +285,10 @@ async function greedySell(coinsWithHike){
               cntLossRestore=0;             
             }
 
-            if(percentageEarned > 8 || cntLoss > 50 || percentageEarned < -11){
+            if(percentageEarned > 8 || cntLoss > 2400 || percentageEarned < -11){
           
               if(cntLoss > 50 || cnt > 10000  || percentageEarned < -11){
-                // sell if waited for appr. 3min bw -8 to -11 or it is more than 30 min or too much of loss
+                // sell if waited for appr. 2hrs bw -8 to -11 or it is more than 30 min or too much of loss
               sell(intervalId,_id,symbol,boughtPrice,currentPrice,maxPrice,percentageEarned,cntLoss,cntLossRestore,cnt)
             }else{
               beGreedy(coinsWithHike,_id,-1);
@@ -296,7 +296,7 @@ async function greedySell(coinsWithHike){
              }
 
             }
-            sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} with (>3%) cnt: ${cnt} current price: ${currentPrice} cntLoss: ${cntLoss} Percentage Earned: ${percentageEarned}`);
+            sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} with (>3% or <-8%) cnt: ${cnt} current price: ${currentPrice} cntLoss: ${cntLoss} Percentage Earned: ${percentageEarned}`);
           }
          else{
           sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} cnt: ${cnt}, pending Percentage Earned: ${percentageEarned} cntLossRestore: ${cntLossRestore}`);
@@ -468,19 +468,20 @@ function sell(intervalId,id,symbol,boughtPrice,currentPrice,maxPrice,percentageE
 }
 
 function prefix(id){
-return `id: ${id} ${getTime()} `;
+return `id: ${id} ${getTime()}: `;
 }
 
 async function isStillIncr( coinsWithHike ){
   try {
   let priceHistory= await getPriceHistory(coinsWithHike.symbol);
-  if(priceHistory.length > 5){
-    let arr= priceHistory.slice(0,-5 );
+  if(priceHistory.length > 6){
+    let arr= priceHistory.slice(0,6 );
     let temp=arr[0];
     for(let i=1; i<arr.length; i++){
       if( ( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])) > 3.5 ){
         sendLogs( `${prefix(id)} recommended return, might have incerased already candle length: ${Math.abs(temp - arr[i])} `);
-       }
+       break;
+      }
     temp = arr[i];
   }
    priceHistory.sort((a, b) => b - a); // desc remember original array is modified.
