@@ -8,7 +8,7 @@ import {getCoinReadyToBuy} from "./short-term.js";
 import { suddenFallAlgo } from "./suddenfall.js";
 import { coinHiked, getTime } from "./hike.js";
 import fetch from 'node-fetch'; 
-import { sendLogs,runOnce, updatePriceHistory } from "./firebase.js";
+import { sendLogs,runOnce, updatePriceHistory, getPriceHistory } from "./firebase.js";
 
 let canRunShortTerm = true;
 const interval = setInterval(lossCheck, 30*60*1000); // Check every 30 minutes
@@ -18,17 +18,17 @@ setInterval(keepServerAlive, 5*60*1000); //Make request in every 5 minutes
 setInterval(hikeScheduler,4*60*1000); //Make request in every 4 min
 setInterval(buildPair,24*60*60*1000); //Make request in every 4 min
 
+let ticker5minAgo;
 let ticker10minAgo;
-let ticker20minAgo;
 let id=1;
 hikeScheduler();  // important to run
 // runOnce();
-
-
+// let res= await getPriceHistory('auctionusdt');
+// console.log(res);
 async function hikeScheduler() {
   try{
-    if(ticker10minAgo == undefined){
-    ticker10minAgo =await getTicker();
+    if(ticker5minAgo == undefined){
+    ticker5minAgo =await getTicker();
     return;
   }
   
@@ -38,11 +38,11 @@ async function hikeScheduler() {
   // return;
   const lag1min=await getTicker();
   await sleep(1000*60); // sleep for 1 minute
-  coinHiked(ticker10minAgo,ticker20minAgo,lag1min,id);
+  // coinHiked(ticker5minAgo,ticker10minAgo,lag1min,id);
 
-  ticker20minAgo=[...ticker10minAgo];
-  ticker10minAgo=await getTicker();
-  updatePriceHistory(ticker10minAgo);
+  ticker10minAgo=[...ticker5minAgo];
+  ticker5minAgo=await getTicker();
+  updatePriceHistory(ticker5minAgo);
   id++;
   if(id>100) id=1;
 

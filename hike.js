@@ -475,8 +475,10 @@ async function isStillIncr( coinsWithHike ){
   try {
   let priceHistory= await getPriceHistory(coinsWithHike.symbol);
   if(priceHistory.length > 6){
-    let arr= priceHistory.slice(0,6 );
+    let price30minBack = priceHistory[priceHistory.length -6];
+    let arr= priceHistory.slice(0, -6);
     let temp=arr[0];
+
     for(let i=1; i<arr.length; i++){
       if( ( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])) > 3.5 ){
         sendLogs( `${prefix(id)} recommended return, might have incerased already candle length: ${Math.abs(temp - arr[i])} `);
@@ -484,9 +486,15 @@ async function isStillIncr( coinsWithHike ){
       }
     temp = arr[i];
   }
+
    priceHistory.sort((a, b) => b - a); // desc remember original array is modified.
    if( ((0.15 * priceHistory[0]) + priceHistory[0] ) > coinsWithHike.currentPrice) {  // max till now should be lesser 15%
     sendLogs( `${prefix(id)} recommended return, might have incerased already max price: ${priceHistory[0]}` );
+  }
+
+  if( ( (coinsWithHike.price20minBack - price30minBack) * 100 / price30minBack ) > 10){
+     // create reat opportunity.
+    sendLogs( `${prefix(id)} recommended return, You have missed right time to buy. Recently incr. ${(coinsWithHike.price20minBack - price30minBack )* 100 / price30minBack  }` );
   }
 }
 } catch (error) {sendLogs( `${prefix(id)} Catch error: ${error}` );}
