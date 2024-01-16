@@ -23,8 +23,7 @@ let ticker10minAgo;
 let id=1;
 hikeScheduler();  // important to run
 // runOnce();
-// let res= await getPriceHistory('auctionusdt');
-// console.log(res);
+
 async function hikeScheduler() {
   try{
     if(ticker5minAgo == undefined){
@@ -38,14 +37,13 @@ async function hikeScheduler() {
   // return;
   const lag1min=await getTicker();
   await sleep(1000*60); // sleep for 1 minute
-  // coinHiked(ticker5minAgo,ticker10minAgo,lag1min,id);
+  coinHiked(ticker5minAgo,ticker10minAgo,lag1min,id);
 
   ticker10minAgo=[...ticker5minAgo];
   ticker5minAgo=await getTicker();
   updatePriceHistory(ticker5minAgo);
   id++;
   if(id>100) id=1;
-
  
 }catch(err) {console.error(err);}
 }
