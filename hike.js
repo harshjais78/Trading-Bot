@@ -481,7 +481,7 @@ async function isStillIncr( coinsWithHike ){
 
     for(let i=1; i<arr.length; i++){
       if( ( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])) > 3.5 ){
-        sendLogs( `${prefix(id)} recommended return, might have incerased already candle length: ${Math.abs(temp - arr[i])} `);
+        sendLogs( `${prefix(id)} recommended return, might have incerased already candle length: ${( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i]))} `);
        break;
       }
     temp = arr[i];
