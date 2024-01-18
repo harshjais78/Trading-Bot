@@ -34,7 +34,7 @@ let id=0;
 
 export async function coinHiked(ticker15minAgo,ticker20minAgo,lag1min,no) {
   console.log('coinHiked function called');
-  id=no;
+  id=no+"";
   if(ticker15minAgo == undefined) 
    return ;
   checkPriceHike(ticker15minAgo,ticker20minAgo,lag1min, true);
@@ -188,6 +188,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
 
   } catch (error) {
     console.error('An error occurred:', error);
+    sendLogs(`${prefix(id)} error in checkPriceHike function: ${error.message}`);
   }
 }
 
@@ -331,7 +332,7 @@ async function greedySell(coinsWithHike){
               sendLogs(`${prefix(_id)} more than 3 = true: ${percentageEarned}`);
             }
          
-            sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} with (>3% or <-8%) cnt: ${cnt} current price: ${currentPrice} cntLoss: ${cntLoss} Percentage Earned: ${percentageEarned}`);
+            sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} with (>3% or <-8%) cnt: ${cnt} current price: ${currentPrice} Percentage Earned: ${percentageEarned}`);
           }
          else{
           sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} cnt: ${cnt}, pending Percentage Earned: ${percentageEarned} cntLossRestore: ${cntLossRestore}`);
@@ -351,6 +352,8 @@ async function greedySell(coinsWithHike){
   }, 3000); // 3 seconds in milliseconds
 }catch (error) {
   console.log('An error occurred:', error);
+  sendLogs(`${prefix(id)} error in greedySell function: ${error.message}`);
+
 }
 }
 
