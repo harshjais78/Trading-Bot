@@ -248,6 +248,12 @@ async function greedySell(coinsWithHike){
   let cntLoss=0;
   let cntLossRestore=0;
   let _id=id;
+  let isMoreThan3 =false;
+  let moreThan3cnt = 0;
+  let maxLossAccepted = -8;
+  let targetProfit = 7;
+  let lastcnt = 0;
+
 
   // Fetch ticker data every 3 seconds
   const intervalId = setInterval(async () => {
@@ -278,24 +284,53 @@ async function greedySell(coinsWithHike){
         else{
           //sell coin and replace sold coin price with currentPrice
           const percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
-          if ( percentageEarned > 3 || percentageEarned <= -8 ){  // if price is bw -8 to 3 then do nothing, hope coin to inc more than 3%
+          if ( percentageEarned >= 3 || percentageEarned < maxLossAccepted ){  // if price is bw -8 to 3 then do nothing, hope coin to inc more than 3%
 
-            if(percentageEarned <= -8 && percentageEarned > -11 ){ // wait for approx. 3 min if price remains between given cnd. then sell. 
-              cntLoss++; 
-              cntLossRestore=0;             
-            }
+            // if(percentageEarned <= -8 && percentageEarned > maxLossAccepted ){ // wait for approx. 3 min if price remains between given cnd. then sell. 
+            //   cntLoss++; 
+            //   cntLossRestore=0;             
+            // }
 
-            if(percentageEarned > 8 || cntLoss > 2400 || percentageEarned < -11){
+            if(percentageEarned >= targetProfit || percentageEarned < maxLossAccepted){
           
-              if(cntLoss > 50 || cnt > 10000  || percentageEarned < -11){
+              if( percentageEarned < maxLossAccepted){
                 // sell if waited for appr. 2hrs bw -8 to -11 or it is more than 30 min or too much of loss
               sell(intervalId,_id,symbol,boughtPrice,currentPrice,maxPrice,percentageEarned,cntLoss,cntLossRestore,cnt)
             }else{
+              sendLogs(`${prefix(_id)} inside greedy sell: targetProfit: ${targetProfit} percentageEarned: ${percentageEarned}`); 
+              if(targetProfit <= 3)
+                beGreedy(coinsWithHike,_id,-0.3);
+              else if (targetProfit >= 7)
+                beGreedy(coinsWithHike,_id,-2);
+              else
               beGreedy(coinsWithHike,_id,-1);
+ 
               clearInterval(intervalId);
              }
 
             }
+            moreThan3cnt++;
+            if(isMoreThan3){
+              targetProfit = 10;
+              if(lastcnt + 8 <= cnt ){ // after 30 sec
+                if(currentPrice < lastPrice && percentageEarned >= 2.7){
+                  beGreedy(coinsWithHike,_id,-0.5);
+                  clearInterval(intervalId);
+                }
+                lastPrice = currentPrice;
+                lastcnt = cnt;
+                sendLogs(`${prefix(_id)} incr. bit by bit: ${percentageEarned}`);
+              }
+
+            }
+
+            if(moreThan3cnt >= 4){
+              maxLossAccepted = -3;
+              isMoreThan3 = true;
+              lastPrice = currentPrice;
+              sendLogs(`${prefix(_id)} more than 3 = true: ${percentageEarned}`);
+            }
+         
             sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} with (>3% or <-8%) cnt: ${cnt} current price: ${currentPrice} cntLoss: ${cntLoss} Percentage Earned: ${percentageEarned}`);
           }
          else{
@@ -303,9 +338,10 @@ async function greedySell(coinsWithHike){
           cntLossRestore++;
           if(cntLossRestore > 4) // if price remained better than -8% atleast for 4*3 sec then restore cntLoss variable to 0 
             cntLoss= 0;
-            if(cnt > 4800 && percentageEarned >= 0){
-              beGreedy(coinsWithHike,_id,-0.6);
+            if(isMoreThan3 && percentageEarned <= 0){
+              targetProfit = 3;
             }
+            moreThan3cnt = 0;
         } 
         }
       }
