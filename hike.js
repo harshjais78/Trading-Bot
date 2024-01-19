@@ -316,7 +316,7 @@ async function greedySell(coinsWithHike){
                 }
                 lastPrice = currentPrice;
                 lastcnt = cnt;
-                sendLogs(`${prefix(_id)} incr. bit by bit: ${percentageEarned}`);
+                sendLogs(`${prefix(_id)} incr. bit by bit: perc. Earned: ${percentageEarned.toFixed(3)}%`);
               }
 
             }
@@ -325,13 +325,13 @@ async function greedySell(coinsWithHike){
               maxLossAccepted = -3;
               isMoreThan3 = true;
               lastPrice = currentPrice;
-              sendLogs(`${prefix(_id)} more than 3 = true: ${percentageEarned}`);
+              sendLogs(`${prefix(_id)} more than 3 = true: ${percentageEarned.toFixed(3)}`);
             }
          
-            sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} with (>3% or <-8%) cnt: ${cnt} current price: ${currentPrice} Percentage Earned: ${percentageEarned} targetProfit: ${targetProfit}`);
+            sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} with (>3% or <-8%) cnt: ${cnt} current price: ${currentPrice} Percentage Earned: ${percentageEarned.toFixed(3)} targetProfit: ${targetProfit}`);
           }
          else{
-          sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} cnt: ${cnt}, pending Percentage Earned: ${percentageEarned} cntLossRestore: ${cntLossRestore}`);
+          sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} cnt: ${cnt}, pending Percentage Earned: ${percentageEarned.toFixed(3)} cntLossRestore: ${cntLossRestore}`);
           cntLossRestore++;
           if(cntLossRestore > 4) // if price remained better than -8% atleast for 4*3 sec then restore cntLoss variable to 0 
             cntLoss= 0;
@@ -511,7 +511,7 @@ async function isStillIncr( coinsWithHike ){
   try {
   let priceHistory= await getPriceHistory(coinsWithHike.symbol);
   if(priceHistory.length > 6){
-    let price30minBack = priceHistory[priceHistory.length -6];
+    let price30minBack = priceHistory[priceHistory.length -4];
     let arr= priceHistory.slice(0, -6);
     let temp=arr[0];
 
@@ -524,7 +524,7 @@ async function isStillIncr( coinsWithHike ){
   }
 
    priceHistory.sort((a, b) => b - a); // desc remember original array is modified.
-   if( ((0.15 * priceHistory[0]) + priceHistory[0] ) > coinsWithHike.currentPrice) {  // max till now should be lesser 15%
+   if( ((0.15 * priceHistory[0]) + priceHistory[0] ) >= coinsWithHike.currentPrice) {  // max till now should be lesser 15%
     sendLogs( `${prefix(id)} recommended return, might have incerased already max price: ${priceHistory[0]}` );
   }
 
