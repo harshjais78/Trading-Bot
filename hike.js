@@ -150,7 +150,9 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
     sendLogs(`${prefix(id)}  Coins with Price Hike ***** (>${priceHikeThreshold}/${combineHikeThreshold}%): ${JSON.stringify(coinsWithHike)}`)
 
     for(let i = 0; i < coinsWithHike.length; i++){
-      checkAndBuy(coinsWithHike,i);
+      if(i != 0)
+      id = id + '-';
+      checkAndBuy(coinsWithHike,i,id);
      }
     }
     else{
@@ -192,7 +194,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
   }
 }
 
-async function checkAndBuy(coinsWithHike,i){
+async function checkAndBuy(coinsWithHike,i,id){
   let isStillinc = await isStillIncr(coinsWithHike[i]);
   sendLogs(`${prefix(id)}  isStillinc= ${isStillinc}`);
   if (! isStillinc ){
@@ -203,11 +205,11 @@ async function checkAndBuy(coinsWithHike,i){
  
  let incTicker = await getTicker(); // need update
  
- while (isPriceEqual(incTicker, coinsWithHike[i]) && false) {
-   await sleep(2000);
-   incTicker = await getTicker();
-   console.log('Checking again...');
- }
+//  while (isPriceEqual(incTicker, coinsWithHike[i]) && false) {
+  //  await sleep(2000);
+  //  incTicker = await getTicker();
+  //  console.log('Checking again...');
+//  }
 
  incTicker.forEach(async (ticker1minBack)=> {
   if(ticker1minBack.market == coinsWithHike[i].symbol){
@@ -310,13 +312,17 @@ async function greedySell(coinsWithHike){
             if(isMoreThan3){
               targetProfit = 10;
               if(lastcnt + 8 <= cnt ){ // after 30 sec
+                if(currentPrice < lastPrice){
+                  maxLossAccepted = -2;
+                } 
                 if(currentPrice < lastPrice && percentageEarned >= 2.7){
-                  beGreedy(coinsWithHike,_id,-0.5);
+                sendLogs(`${prefix(_id)} Being Greedy: perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} currentPrice: ${currentPrice}`);
+                beGreedy(coinsWithHike,_id,-0.5);
                   clearInterval(intervalId);
                 }
                 lastPrice = currentPrice;
                 lastcnt = cnt;
-                sendLogs(`${prefix(_id)} incr. bit by bit: perc. Earned: ${percentageEarned.toFixed(3)}%`);
+                sendLogs(`${prefix(_id)} incr. bit by bit: perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} `);
               }
 
             }
