@@ -257,6 +257,7 @@ async function greedySell(coinsWithHike){
   let targetProfit = 7;
   let lastcnt = 0;
   let lastPrice = 100;
+  let profitArr=[]
 
 
   // Fetch ticker data every 3 seconds
@@ -311,7 +312,7 @@ async function greedySell(coinsWithHike){
             moreThan3cnt++;
             if(isMoreThan3){
               targetProfit = 10;
-              if(lastcnt + 8 <= cnt ){ // after 30 sec
+              if(lastcnt + 7 <= cnt ){ // after 21 sec
                 if(currentPrice < lastPrice){
                   maxLossAccepted = -2;
                 } 
@@ -323,6 +324,15 @@ async function greedySell(coinsWithHike){
                 lastPrice = currentPrice;
                 lastcnt = cnt;
                 sendLogs(`${prefix(_id)} incr. bit by bit: perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} `);
+              }
+
+              profitArr.push(percentageEarned);
+              if(profitArr.length >2){
+              profitArr=profitArr.slice(-3);
+              if( profitArr[2] -profitArr[0] >= 7){
+                sendLogs(`${prefix(_id)} seems to be wick, so selling. Sum of last 3 percEarned: ${profitArr[2] - profitArr[0]}`);
+                beGreedy(coinsWithHike,_id,-1);
+            }
               }
 
             }
@@ -383,59 +393,59 @@ async function beGreedy(coinsWithHike, id, maxGreedy){
     const symbol=coinsWithHike.symbol;
     sendLogs(`${prefix(id)}  inside beGreedy`);
   
-    var maxPrice =-1;
-    console.log(maxPrice);
-    let cnt = 0;
+    // var maxPrice =-1;
+    // console.log(maxPrice);
+    // let cnt = 0;
     
-    if (maxGreedy == undefined)
-      maxGreedy = -2;
+    // if (maxGreedy == undefined)
+    //   maxGreedy = -2;
      
-    // Fetch ticker data every 3 seconds
-    const intervalId = setInterval(async () => {
-      try {
-        const tickerData = await getTicker(symbol);
+    // // Fetch ticker data every 3 seconds
+    // const intervalId = setInterval(async () => {
+    //   try {
+        const tickerData = await getTicker();
         let currentPrice;
-        cnt++;
+    //     cnt++;
 
         if (!tickerData) {
           console.error(`Ticker data not available for ${symbol}`);
           return;
         }
 
-        // run at every 3 seconds
+    //     // run at every 3 seconds
         tickerData.forEach((currentTicker)=> {
           if(currentTicker.market == symbol){
            currentPrice = parseFloat(currentTicker.last_price);
-          if(maxPrice == -1)
-           maxPrice = currentPrice;
-          return;
+          // if(maxPrice == -1)
+          //  maxPrice = currentPrice;
+          return; // leaves only current iteration
         }
         });
   
-        console.log(currentPrice,maxPrice);
-        if (currentPrice != undefined) {
+    //     console.log(currentPrice,maxPrice);
+    //     if (currentPrice != undefined) {
   
-          if (currentPrice >= maxPrice) {
-            maxPrice = currentPrice;
-            console.log(`New max price for ${symbol}: ${maxPrice}`);
-            sendLogs(`${prefix(id)} updated maxPrice: ${maxPrice}` );          
+    //       if (currentPrice >= maxPrice) {
+    //         maxPrice = currentPrice;
+    //         console.log(`New max price for ${symbol}: ${maxPrice}`);
+    //         sendLogs(`${prefix(id)} updated maxPrice: ${maxPrice}` );          
 
-          }
-          else{
-          const priceChangePercent = ((currentPrice - maxPrice ) / maxPrice) * 100;
+    //       }
+    //       else{
+          // const priceChangePercent = ((currentPrice - maxPrice ) / maxPrice) * 100;
   
-          if (priceChangePercent <= maxGreedy) {
+    //       if (priceChangePercent <= maxGreedy) {
             const percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
-            sell(intervalId,id,symbol,boughtPrice,currentPrice,maxPrice,percentageEarned,'','',cnt)  
-          }
-          sendLogs(`${prefix(id)} inside beGreedy current price: ${currentPrice} priceChange%: ${priceChangePercent} maxPrice: ${maxPrice}` );          
-          }
+            sell('',id,symbol,boughtPrice,currentPrice,'',percentageEarned,'','','')  
+        //   }
+        //   sendLogs(`${prefix(id)} inside beGreedy current price: ${currentPrice} priceChange%: ${priceChangePercent} maxPrice: ${maxPrice}` );          
+        //   }
           
-        }
-      } catch (error) {
-        console.error('An error occurred:', error);
-      }
-    }, 3000); // 3 seconds in milliseconds
+        // }
+    //   } catch (error) {
+    //     console.error('An error occurred:', error);
+    //   }
+    // }, 3000); // 3 seconds in milliseconds
   }catch (error) {
     console.log('An error occurred:', error);
   }
@@ -523,12 +533,13 @@ async function isStillIncr( coinsWithHike ){
 
     for(let i=1; i<arr.length; i++){
       if( ( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])) > 3.5 ){
-        sendLogs( `${prefix(id)} recommended return, might have incerased already candle length: ${( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i]))} `);
+        sendLogs( `${prefix(id)} recommended return, might have incerased already candle length: ${( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])).toFixed(3)}% `);
        break;
       }
     temp = arr[i];
   }
 
+   priceHistory = priceHistory.slice(-3);
    priceHistory.sort((a, b) => b - a); // desc remember original array is modified.
    if( ((0.15 * priceHistory[0]) + priceHistory[0] ) >= coinsWithHike.currentPrice) {  // max till now should be lesser 15%
     sendLogs( `${prefix(id)} recommended return, might have incerased already max price: ${priceHistory[0]}` );
@@ -536,7 +547,7 @@ async function isStillIncr( coinsWithHike ){
 
   if( ( (coinsWithHike.price20minBack - price30minBack) * 100 / price30minBack ) > 10){
      // create reat opportunity.
-    sendLogs( `${prefix(id)} recommended return, You have missed right time to buy. Recently incr. ${(coinsWithHike.price20minBack - price30minBack )* 100 / price30minBack  }` );
+    sendLogs( `${prefix(id)} recommended return, You have missed right time to buy. Recently incr. ${((coinsWithHike.price20minBack - price30minBack )* 100 / price30minBack).toFixed(3)  }%` );
   }
 }
 } catch (error) {sendLogs( `${prefix(id)} Catch error: ${error}` );}
