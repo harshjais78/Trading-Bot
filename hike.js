@@ -97,10 +97,11 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
         const currentPrice = parseFloat(currentCoin.last_price);
         const priceChangePercent = ((currentPrice - previousPrice) / previousPrice) * 100;
          // current should be increasing
-         // sendLogs(`${prefix(id)}  current candle priceChangePercent: ${priceChangePercent}`);
-         
          
         if (priceChangePercent >= priceHikeThreshold || ( priceChangePercent + prevChangePerc >= combineHikeThreshold && priceChangePercent > 1 )) { 
+          if(prevChangePerc >= priceHikeThreshold -1){
+            sendLogs(`${prefix(id)} recommended return, prev Inc is too much`);
+          }else{
           coinsWithHike.push({
             symbol,
             priceChangePercent,
@@ -109,6 +110,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
             previousPrice,
             price20minBack,
           });
+        }
         }
         else if(priceChangePercent >= recheckThreshold && canCheckBranch ){
          canCheckBranch = false;
@@ -195,32 +197,13 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
 }
 
 async function checkAndBuy(coinsWithHike,i,id){
-  let isStillinc = await isStillIncr(coinsWithHike[i]);
+  let isStillinc = await isStillIncr(coinsWithHike[i], id);
   sendLogs(`${prefix(id)}  isStillinc= ${isStillinc}`);
   if (! isStillinc ){
    sendLogs(`${prefix(id)}  second candle's first 30sec returned false, returning...`);
    return;
   }
-  
- 
- let incTicker = await getTicker(); // need update
- 
-//  while (isPriceEqual(incTicker, coinsWithHike[i]) && false) {
-  //  await sleep(2000);
-  //  incTicker = await getTicker();
-  //  console.log('Checking again...');
-//  }
 
- incTicker.forEach(async (ticker1minBack)=> {
-  if(ticker1minBack.market == coinsWithHike[i].symbol){
-   let delta =(parseFloat(coinsWithHike[i].currentPrice) - parseFloat(ticker1minBack.last_price)) /parseFloat(ticker1minBack.last_price) * 100;
-   if( delta < -5 ){
-   // if coins value is decreased more than 5% then, most porbably coins will decrease further.
-   console.log('Price started to dec');
-   sendLogs(`${prefix(id)}  Price started to dec. delta value: ${delta}`)
-   return; // most probably coin have started to decr.
-  }
-   else{
      let result =await isSingleMinHike(coinsWithHike[i]);
     sendLogs(`${prefix(id)}  result of singleminHike = ${result}`);
      if(result){
@@ -232,15 +215,11 @@ async function checkAndBuy(coinsWithHike,i,id){
    console.log(`virtual Coin: ${coinsWithHike[i].symbol} bought at ${ticker1minBack.last_price} preparing to sell`);
    //buy at current market
    coinsWithHike[i].currentPrice=ticker1minBack.last_price;
-   greedySell(coinsWithHike[i]);
- }
- return;
- }
+   greedySell(coinsWithHike[i], id);
 
- });
 }
 
-async function greedySell(coinsWithHike){
+async function greedySell(coinsWithHike, id){
   try {
   const boughtPrice=coinsWithHike.currentPrice;
   const symbol=coinsWithHike.symbol;
@@ -286,10 +265,45 @@ async function greedySell(coinsWithHike){
           const percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
           if ( percentageEarned >= 3 || percentageEarned < maxLossAccepted ){  // if price is bw -8 to 3 then do nothing, hope coin to inc more than 3%
 
-            // if(percentageEarned <= -8 && percentageEarned > maxLossAccepted ){ // wait for approx. 3 min if price remains between given cnd. then sell. 
-            //   cntLoss++; 
-            //   cntLossRestore=0;             
-            // }
+            moreThan3cnt++;
+            if(isMoreThan3){
+              targetProfit = 10;
+              if(lastcnt + 7 <= cnt ){ // after 21 sec
+                if(currentPrice < lastPrice){
+                  maxLossAccepted = -2;
+                } 
+                if(currentPrice < lastPrice && percentageEarned >= 2.7){
+                sendLogs(`${prefix(_id)} Being Greedy: perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} currentPrice: ${currentPrice}`);
+                beGreedy(coinsWithHike,_id,-0.5);
+                  clearInterval(intervalId);
+                }
+                lastPrice = currentPrice;
+                lastcnt = cnt;
+                sendLogs(`${prefix(_id)} After 21 sec perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} `);
+              }
+
+              profitArr.push(percentageEarned);
+              if(profitArr.length >2){
+              profitArr=profitArr.slice(-3);
+              if( profitArr[2] -profitArr[0] >= 7){   // increased suddenly
+                sendLogs(`${prefix(_id)} seems to be wick, so selling. Sum of last 3 percEarned: ${profitArr[2] - profitArr[0]}`);
+                beGreedy(coinsWithHike,_id,-1);
+            }
+
+            if(profitArr[2]- profitArr[1] < -5 || profitArr[2]- profitArr[0] < -5 ){ // decreased suddenly.
+              targetProfit =3;
+              maxLossAccepted = -6;
+            }
+            }
+
+            }
+
+            if(moreThan3cnt >= 4){
+              maxLossAccepted = -3;
+              isMoreThan3 = true;
+              lastPrice = currentPrice;
+              sendLogs(`${prefix(_id)} more than 3 = true: ${percentageEarned.toFixed(3)}`);
+            }
 
             if(percentageEarned >= targetProfit || percentageEarned < maxLossAccepted){
           
@@ -308,40 +322,6 @@ async function greedySell(coinsWithHike){
               clearInterval(intervalId);
              }
 
-            }
-            moreThan3cnt++;
-            if(isMoreThan3){
-              targetProfit = 10;
-              if(lastcnt + 7 <= cnt ){ // after 21 sec
-                if(currentPrice < lastPrice){
-                  maxLossAccepted = -2;
-                } 
-                if(currentPrice < lastPrice && percentageEarned >= 2.7){
-                sendLogs(`${prefix(_id)} Being Greedy: perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} currentPrice: ${currentPrice}`);
-                beGreedy(coinsWithHike,_id,-0.5);
-                  clearInterval(intervalId);
-                }
-                lastPrice = currentPrice;
-                lastcnt = cnt;
-                sendLogs(`${prefix(_id)} incr. bit by bit: perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} `);
-              }
-
-              profitArr.push(percentageEarned);
-              if(profitArr.length >2){
-              profitArr=profitArr.slice(-3);
-              if( profitArr[2] -profitArr[0] >= 7){
-                sendLogs(`${prefix(_id)} seems to be wick, so selling. Sum of last 3 percEarned: ${profitArr[2] - profitArr[0]}`);
-                beGreedy(coinsWithHike,_id,-1);
-            }
-              }
-
-            }
-
-            if(moreThan3cnt >= 4){
-              maxLossAccepted = -3;
-              isMoreThan3 = true;
-              lastPrice = currentPrice;
-              sendLogs(`${prefix(_id)} more than 3 = true: ${percentageEarned.toFixed(3)}`);
             }
          
             sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} with (>3% or <-8%) cnt: ${cnt} current price: ${currentPrice} Percentage Earned: ${percentageEarned.toFixed(3)} targetProfit: ${targetProfit}`);
@@ -370,22 +350,74 @@ async function greedySell(coinsWithHike){
 }
 }
 
-function isPriceEqual(incTicker,coinsWithHike){
-const symbol=coinsWithHike.symbol;
-const price=parseFloat(coinsWithHike.currentPrice); // bought price
-for (const currentTicker of incTicker) {
-  if (currentTicker.market === symbol) {
-    console.log(parseFloat(currentTicker.last_price), price, parseFloat(currentTicker.last_price) === price);
 
-    if (parseFloat(currentTicker.last_price) === price) {
-      return true;
-    } else {
-      return false;
-    }
+
+
+
+
+
+
+
+
+
+
+async function isStillIncr( coinsWithHike, id ){
+  try {
+  let priceHistory= await getPriceHistory(coinsWithHike.symbol);
+  if(priceHistory.length > 6){
+    let price30minBack = priceHistory[priceHistory.length -6];
+    let arr= priceHistory.slice(0, -6);
+    let temp=arr[0];
+
+    for(let i=1; i<arr.length; i++){
+      if( ( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])) > 3.5 ){
+        sendLogs( `${prefix(id)} recommended return, might have incerased already candle length: ${( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])).toFixed(3)}% `);
+       break;
+      }
+    temp = arr[i];
+  }
+
+   priceHistory = priceHistory.slice(-3);
+   priceHistory.sort((a, b) => b - a); // desc remember original array is modified.
+   if( ((0.15 * priceHistory[0]) + priceHistory[0] ) >= coinsWithHike.currentPrice) {  // max till now should be lesser 15%
+    sendLogs( `${prefix(id)} recommended return, might have incerased already max price: ${priceHistory[0]}` );
+  }
+
+  if( ( (coinsWithHike.price20minBack - price30minBack) * 100 / price30minBack ) > 10){
+     // create reat opportunity.
+    sendLogs( `${prefix(id)} recommended return, You have missed right time to buy. Recently incr. ${((coinsWithHike.price20minBack - price30minBack )* 100 / price30minBack).toFixed(3)  }%` );
   }
 }
-return true;
+} catch (error) {sendLogs( `${prefix(id)} Catch error: ${error}` );}
+
+//------------------------------------------------------------------------------
+
+ for ( let i=0; i<10; i++ ){
+     await sleep(3 * 1000);
+     let secFurtherList= await getTicker();
+     
+    for (const secFurther of secFurtherList) {
+     if (secFurther.market === coinsWithHike.symbol) {
+     let delta = (parseFloat(secFurther.last_price)- parseFloat(coinsWithHike.currentPrice)) / parseFloat(coinsWithHike.currentPrice) * 100;
+
+     if (delta >= 1 ) {
+     // sendLogs(`${prefix(id)}  second candle's first 30sec delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}, returning...`);
+      sendLogs(`${prefix(id)}  second candle's first ${i} loop delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}`);
+       coinsWithHike.currentPrice = parseFloat(secFurther.last_price);
+      return true;
+      }
+      if (i == 9 ){
+       sendLogs(`${prefix(id)}  second candle's first ${i} loop delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}, returning`);
+      }
+      break;
+  }
+    }
+
+ }
+ return false;
 }
+
+
 
 async function beGreedy(coinsWithHike, id, maxGreedy){
   try {
@@ -523,61 +555,20 @@ function prefix(id){
 return `id: ${id} ${getTime()}: `;
 }
 
-async function isStillIncr( coinsWithHike ){
-  try {
-  let priceHistory= await getPriceHistory(coinsWithHike.symbol);
-  if(priceHistory.length > 6){
-    let price30minBack = priceHistory[priceHistory.length -4];
-    let arr= priceHistory.slice(0, -6);
-    let temp=arr[0];
-
-    for(let i=1; i<arr.length; i++){
-      if( ( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])) > 3.5 ){
-        sendLogs( `${prefix(id)} recommended return, might have incerased already candle length: ${( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])).toFixed(3)}% `);
-       break;
+function isPriceEqual(incTicker,coinsWithHike){
+  const symbol=coinsWithHike.symbol;
+  const price=parseFloat(coinsWithHike.currentPrice); // bought price
+  for (const currentTicker of incTicker) {
+    if (currentTicker.market === symbol) {
+      console.log(parseFloat(currentTicker.last_price), price, parseFloat(currentTicker.last_price) === price);
+  
+      if (parseFloat(currentTicker.last_price) === price) {
+        return true;
+      } else {
+        return false;
       }
-    temp = arr[i];
-  }
-
-   priceHistory = priceHistory.slice(-3);
-   priceHistory.sort((a, b) => b - a); // desc remember original array is modified.
-   if( ((0.15 * priceHistory[0]) + priceHistory[0] ) >= coinsWithHike.currentPrice) {  // max till now should be lesser 15%
-    sendLogs( `${prefix(id)} recommended return, might have incerased already max price: ${priceHistory[0]}` );
-  }
-
-  if( ( (coinsWithHike.price20minBack - price30minBack) * 100 / price30minBack ) > 10){
-     // create reat opportunity.
-    sendLogs( `${prefix(id)} recommended return, You have missed right time to buy. Recently incr. ${((coinsWithHike.price20minBack - price30minBack )* 100 / price30minBack).toFixed(3)  }%` );
-  }
-}
-} catch (error) {sendLogs( `${prefix(id)} Catch error: ${error}` );}
-
-
- for ( let i=0; i<10; i++ ){
-     await sleep(3 * 1000);
-     let secFurtherList= await getTicker();
-     
-    for (const secFurther of secFurtherList) {
-     if (secFurther.market === coinsWithHike.symbol) {
-     let delta = (parseFloat(secFurther.last_price)- parseFloat(coinsWithHike.currentPrice)) / parseFloat(coinsWithHike.currentPrice) * 100;
-
-     if (delta >= 1 ) {
-     // sendLogs(`${prefix(id)}  second candle's first 30sec delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}, returning...`);
-      sendLogs(`${prefix(id)}  second candle's first ${i} loop delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}`);
-       coinsWithHike.currentPrice = parseFloat(secFurther.last_price);
-      return true;
-      }
-      if (i == 9 ){
-       sendLogs(`${prefix(id)}  second candle's first ${i} loop delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}, returning`);
-      }
-      break;
-  }
     }
-
- }
- return false;
-
-
-}
-
+  }
+  return true;
+  }
 
