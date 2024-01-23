@@ -2,8 +2,8 @@ import { getCandleChart,getMarketDetails,getTicker } from "./ApiInfo.js";
 import { sendEmail } from "./Email.js";
 import fetch from 'node-fetch'; 
 import {  startBuyCoinProcess} from "./trans.js";
-import { sendLogs,getPriceHistory } from "./firebase.js";
-import { getPair, sleep } from "./util.js";
+import { sendLogs } from "./firebase.js";
+import { getPair, sleep,getPriceHistory } from "./util.js";
 import * as CONSTANT from './Constant.js'
 
 /*

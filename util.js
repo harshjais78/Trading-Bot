@@ -171,3 +171,75 @@ export function timestampToDay(timestamp) {
       return 'Error retrieving pair information';
     }
   }
+
+
+  const MAX_COIN_HISTORY = 140; 
+const PRICE_HISTORY_FILE = path.join(__dirname, "/fs/priceHistory.json");
+
+export async function updatePriceHistory(coinsData) {
+    try {
+        console.log('updatePriceHistory');
+        if (!coinsData || !Array.isArray(coinsData)) {
+            console.log('Invalid input data. Expected a JSON array.');
+            return;
+        }
+
+        // Read current prices from the local file
+        let currentPrices = {};
+        try {
+          const filePath = path.resolve(__dirname, PRICE_HISTORY_FILE);
+          const fileData = await fs.promises.readFile(filePath, 'utf-8');
+            currentPrices = JSON.parse(fileData);
+        } catch (error) {
+            console.log('Error reading Price History file:', error);
+        }
+
+        // Update coin prices with the new data
+        coinsData.forEach((coin) => {
+            const { market, last_price } = coin;
+
+            if (market && last_price !== undefined) {
+                // Initialize an array for the coin if it doesn't exist
+                if (!currentPrices[market]) {
+                    currentPrices[market] = [];
+                }
+
+                // Append the new price to the array
+                currentPrices[market].push(last_price);
+
+                // Ensure the array does not exceed the maximum length
+                if (currentPrices[market].length > MAX_COIN_HISTORY) {
+                    currentPrices[market].shift(); // Remove the oldest entry
+                }
+            }
+        });
+
+        // Write the updated prices to the local file
+        try {
+            const filePath = path.resolve(__dirname, PRICE_HISTORY_FILE);
+            await fs.promises.writeFile(filePath, JSON.stringify(currentPrices, null, 2), 'utf-8');
+        } catch (error) {
+            console.error('Error storing Price History:', error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+export async function getPriceHistory(market) {
+    try {
+        market = market.toUpperCase();
+
+        // Read price history from the local file
+        const filePath = path.resolve(__dirname, PRICE_HISTORY_FILE);
+        const fileData = await fs.promises.readFile(filePath, 'utf-8');
+        const priceHistory = JSON.parse(fileData)[market];
+
+        // Return the price history array
+        return priceHistory ? priceHistory.map(str => parseFloat(str)) : [];
+    } catch (error) {
+        console.error('Error:', error);
+        // Handle errors appropriately (e.g., throw an error, return a default value)
+        throw new Error('Failed to retrieve price history.');
+    }
+}

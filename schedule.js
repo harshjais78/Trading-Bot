@@ -2,13 +2,13 @@ import { getCandleChart, getINRbalance,getTicker } from "./ApiInfo.js";
 import { activeOrders, sellCoins } from "./trans.js";
 import { buildPair, daysPassedSince, generateLossOrderId, getStoredJson, moveOrderIdToSell } from "./util.js";
 import * as CONSTANT from "./Constant.js"; 
-import { convertPairIntoCoindcxName,getMiscData,saveMiscResults,sleep } from "./util.js";
+import { convertPairIntoCoindcxName,getMiscData,saveMiscResults,sleep,updatePriceHistory,getPriceHistory} from "./util.js";
 import { sendEmail } from "./Email.js";
 import {getCoinReadyToBuy} from "./short-term.js";
 import { suddenFallAlgo } from "./suddenfall.js";
 import { coinHiked, getTime } from "./hike.js";
 import fetch from 'node-fetch'; 
-import { sendLogs,runOnce, updatePriceHistory, getPriceHistory } from "./firebase.js";
+import { sendLogs,runOnce,updatePriceHistoryInFirebase } from "./firebase.js";
 
 let canRunShortTerm = true;
 const interval = setInterval(lossCheck, 30*60*1000); // Check every 30 minutes
@@ -23,6 +23,7 @@ let ticker10minAgo;
 let id=1;
 hikeScheduler();  // important to run
 // runOnce();
+initializePriceHistoryFromFirebase();
 
 async function hikeScheduler() {
   try{
