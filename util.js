@@ -9,6 +9,7 @@ const __dirname = path.dirname(__filename);
 const suddenFall_FilePath = path.join(__dirname, "/fs/sudden-fall.json");
 const shortTerm_FilePath = path.join(__dirname, "/fs/short-term.json");
 const misc_FilePath = path.join(__dirname, "/fs/misc.json");
+const priceHistory_FilePath = path.join(__dirname, "/fs/priceHistory.json");
 
 export function timestampToDay(timestamp) {
     const date = new Date(timestamp);
@@ -57,6 +58,8 @@ export function timestampToDay(timestamp) {
       let filePath=shortTerm_FilePath;
       if(type==CONSTANT.suddenFall)
       filePath=suddenFall_FilePath;
+     else if (type==CONSTANT.priceHistory)
+      filePath = priceHistory_FilePath;
 
       const data = await fs.promises.readFile(filePath, "utf8");
       return JSON.parse(data);

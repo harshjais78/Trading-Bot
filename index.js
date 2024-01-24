@@ -24,15 +24,18 @@ app.get('/', (req, res) => {
 
 app.get('/check', async (req, res) => {
     try {
-        const st = await getStoredJson(CONSTANT.shortTerm);
-        const sf = await getStoredJson(CONSTANT.suddenFall);
-        res.status(200).send({"short-term":st, "sudden fall": sf});  
+        // const st = await getStoredJson(CONSTANT.shortTerm);
+        // const sf = await getStoredJson(CONSTANT.suddenFall);
+        const ph = await getStoredJson(CONSTANT.priceHistory);
+        res.status(200).send({
+            // "short-term":st, "sudden fall": sf,
+            "priceHistory":ph});  
     } catch (error) {
         console.error('An error occurred:', error);
         res.status(500).send({ error: 'An error occurred' });
     }
 });
  
-app.listen(port, function() {`listening on ${port}`});
+app.listen(port, function() {console.log(`listening on ${port}`)});
 
  

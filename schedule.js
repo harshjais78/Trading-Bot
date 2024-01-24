@@ -42,7 +42,8 @@ async function hikeScheduler() {
 
   ticker10minAgo=[...ticker5minAgo];
   ticker5minAgo=await getTicker();
-  updatePriceHistory(ticker5minAgo);
+  await updatePriceHistory(ticker5minAgo); // in file system
+  updatePriceHistoryInFirebase(); // in firebase
   id++;
   if(id>100) id=1;
  
