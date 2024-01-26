@@ -100,7 +100,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
          
         if (priceChangePercent >= priceHikeThreshold || ( priceChangePercent + prevChangePerc >= combineHikeThreshold && priceChangePercent > 1 )) { 
           if(prevChangePerc >= priceHikeThreshold ){
-            sendLogs(`${prefix(id)} recommended return, prev Inc is too much`);
+            sendLogs(`${prefix(id)} recommended return, prev Inc is too much for coin: ${symbol}`);
           }else{
           coinsWithHike.push({
             symbol,
@@ -196,8 +196,9 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
   }
 }
 
-async function checkAndBuy(coinsWithHike,i,id){
+async function checkAndBuy(coinsWithHike,i,_id){
   try{
+    let id = _id;
   let isStillinc = await isStillIncr(coinsWithHike[i], id);
   sendLogs(`${prefix(id)}  isStillinc= ${isStillinc}`);
   if (! isStillinc ){
@@ -367,29 +368,31 @@ async function greedySell(coinsWithHike, id){
 
 async function isStillIncr( coinsWithHike, id ){
   try {
+    let symbol = coinsWithHike.symbol;
   let priceHistory= await getPriceHistory(coinsWithHike.symbol);
-  if(priceHistory.length > 6){
+  if(priceHistory && priceHistory.length > 6){
     let price30minBack = priceHistory[priceHistory.length -6];
     let arr= priceHistory.slice(0, -6);
     let temp=arr[0];
 
     for(let i=1; i<arr.length; i++){
       if( ( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])) > 3.5 ){
-        sendLogs( `${prefix(id)} recommended return, might have incerased already candle length: ${( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])).toFixed(3)}% `);
+        sendLogs( `${prefix(id)} recommended return for coin: ${coinsWithHike.symbol}, might have incerased already candle length: ${( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])).toFixed(3)}% `);
        break;
       }
     temp = arr[i];
   }
 
-   priceHistory = priceHistory.slice(-3);
+   priceHistory = priceHistory.slice(0,-4);
    priceHistory.sort((a, b) => b - a); // desc remember original array is modified.
    if( ((0.15 * priceHistory[0]) + priceHistory[0] ) >= coinsWithHike.currentPrice) {  // max till now should be lesser 15%
-    sendLogs( `${prefix(id)} recommended return, might have incerased already max price: ${priceHistory[0]}` );
+    let check = priceHistory.slice(0,10).toString();
+    sendLogs( `${prefix(id)} recommended return for coin: ${coinsWithHike.symbol}, might have incerased already max price: ${priceHistory[0]}, history: ${check}` );
   }
 
   if( ( (coinsWithHike.price20minBack - price30minBack) * 100 / price30minBack ) > 10){
      // create reat opportunity.
-    sendLogs( `${prefix(id)} recommended return, You have missed right time to buy. Recently incr. ${((coinsWithHike.price20minBack - price30minBack )* 100 / price30minBack).toFixed(3)  }%` );
+    sendLogs( `${prefix(id)} recommended return for coin: ${coinsWithHike.symbol}, You have missed right time to buy. Recently incr. ${((coinsWithHike.price20minBack - price30minBack )* 100 / price30minBack).toFixed(3)  }%` );
   }
 }
 } catch (error) {sendLogs( `${prefix(id)} Catch error: ${error}` );}
@@ -406,12 +409,12 @@ async function isStillIncr( coinsWithHike, id ){
 
      if (delta >= 1 ) {
      // sendLogs(`${prefix(id)}  second candle's first 30sec delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}, returning...`);
-      sendLogs(`${prefix(id)}  second candle's first ${i} loop delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}`);
+      sendLogs(`${prefix(id)}  second candle's first ${i} loop delta: ${delta} for ${symbol}: and secFurther: ${parseFloat(secFurther.last_price)}`);
        coinsWithHike.currentPrice = parseFloat(secFurther.last_price);
       return true;
       }
       if (i == 9 ){
-       sendLogs(`${prefix(id)}  second candle's first ${i} loop delta: ${delta} and secFurther: ${parseFloat(secFurther.last_price)}, returning`);
+       sendLogs(`${prefix(id)}  second candle's first ${i} loop delta: ${delta} for ${symbol}: and secFurther: ${parseFloat(secFurther.last_price)}, returning`);
       }
       break;
   }
@@ -514,26 +517,26 @@ async function isSingleMinHike(coinToMonitor) {
   let cnt=0;
   for(const coinDetails of lastCandles){
     if(coinDetails.volume == 0){
-      sendLogs(`${prefix(id)}  in singleMinHike volume == ${coinDetails.volume}`);
+      sendLogs(`${prefix(id)}  in singleMinHike for coin: ${symbol}, volume == ${coinDetails.volume}`);
       return true;
     }
   }
   lastCandles=lastCandles.slice(0,4);
 
-  for(const coinDetails of lastCandles){
-    let open=coinDetails.open;
-    let close=coinDetails.close;
-    let changePerc= ((close - open)/priceChange) * 100;
-    // console.log(`changePerc ${changePerc}`);
-    if (changePerc > 60 && cnt==0){ // current min is increasing 
-      sendLogs(`${prefix(id)}  in singleMinHike changePerc > 60 && cnt==0`);
-     return false;
-    }
-    else if(changePerc > 60 ){
-      sendLogs(`${prefix(id)}  in singleMinHike changePerc > 60`);
-      return true;
-    }
-  }
+  // for(const coinDetails of lastCandles){
+  //   let open=coinDetails.open;
+  //   let close=coinDetails.close;
+  //   let changePerc= ((close - open)/priceChange) * 100;
+  //   // console.log(`changePerc ${changePerc}`);
+  //   if (changePerc > 60 && cnt==0){ // current min is increasing 
+  //     sendLogs(`${prefix(id)}  in singleMinHike changePerc > 60 && cnt==0`);
+  //    return false;
+  //   }
+  //   else if(changePerc > 60 ){
+  //     sendLogs(`${prefix(id)}  in singleMinHike changePerc > 60`);
+  //     return true;
+  //   }
+  // }
   return false;
 }
 

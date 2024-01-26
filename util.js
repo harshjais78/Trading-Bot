@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import * as CONSTANT from './Constant.js'
 import { getMarketDetails } from "./ApiInfo.js";
+import { sendLogs } from "./firebase.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -226,6 +227,8 @@ export async function updatePriceHistory(coinsData) {
         }
     } catch (error) {
         console.error('Error:', error);
+        sendLogs('Failed to updatePriceHistory. Error: ' + error.message);
+
     }
 }
 
@@ -243,6 +246,6 @@ export async function getPriceHistory(market) {
     } catch (error) {
         console.error('Error:', error);
         // Handle errors appropriately (e.g., throw an error, return a default value)
-        throw new Error('Failed to retrieve price history.');
+        sendLogs('Failed to retrieve price history. Error: ' + error.message);
     }
 }
