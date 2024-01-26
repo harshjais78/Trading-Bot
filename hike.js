@@ -205,7 +205,7 @@ async function checkAndBuy(coinsWithHike,i,_id){
    sendLogs(`${prefix(id)}  second candle's first 30sec returned false, returning...`);
    return;
   }
-
+  
      let result =await isSingleMinHike(coinsWithHike[i]);
     sendLogs(`${prefix(id)}  result of singleminHike = ${result}`);
      if(result){
@@ -220,6 +220,7 @@ async function checkAndBuy(coinsWithHike,i,_id){
     }
     catch(error){
       sendLogs(`${prefix(id)}  error in checkAndBuy: ${error.message}`);
+      console.log(error);
     }
 
 }
@@ -367,8 +368,8 @@ async function greedySell(coinsWithHike, id){
 
 
 async function isStillIncr( coinsWithHike, id ){
+  let symbol = coinsWithHike.symbol;
   try {
-    let symbol = coinsWithHike.symbol;
   let priceHistory= await getPriceHistory(coinsWithHike.symbol);
   if(priceHistory && priceHistory.length > 6){
     let price30minBack = priceHistory[priceHistory.length -6];

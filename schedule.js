@@ -31,19 +31,16 @@ async function hikeScheduler() {
     ticker5minAgo =await getTicker();
     return;
   }
-  
-  console.log("hike Scheduler ran");
-  // let balance=await getINRbalance();
-  // if(balance <101) // check in every 4hrs if I have enough money to buy coins
-  // return;
+
   const lag1min=await getTicker();
+  await updatePriceHistory(ticker5minAgo); // in file system
+  updatePriceHistoryInFirebase(); // in firebase    ** Race condition** Need to run before running coinHiked.
   await sleep(1000*60); // sleep for 1 minute
+
   coinHiked(ticker5minAgo,ticker10minAgo,lag1min,id);
 
   ticker10minAgo=[...ticker5minAgo];
   ticker5minAgo=await getTicker();
-  await updatePriceHistory(ticker5minAgo); // in file system
-  updatePriceHistoryInFirebase(); // in firebase
   id++;
   if(id>100) id=1;
  
