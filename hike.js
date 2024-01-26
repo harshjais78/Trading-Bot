@@ -68,7 +68,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
         let prev20minPrice = parseFloat(coin20minAgo.last_price);
         let prev10minDeltaPerc = ((previousPrice - prev20minPrice)/prev20minPrice) *100; 
         price20minBack = prev20minPrice;
-        if(prev10minDeltaPerc >= 2) 
+        if(prev10minDeltaPerc >= 1.5) 
           prevChangePerc = prev10minDeltaPerc;
           else
           prevChangePerc = 0;
@@ -80,7 +80,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
             let prev20minPrice = parseFloat(coin20minAgo.last_price);
             let prev10minDeltaPerc = ((previousPrice - prev20minPrice)/prev20minPrice) *100; 
             price20minBack = prev20minPrice;
-            if(prev10minDeltaPerc >= 2 ) 
+            if(prev10minDeltaPerc >= 1.5 ) 
               prevChangePerc = prev10minDeltaPerc;
               else
               prevChangePerc = 0;
@@ -99,7 +99,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
          // current should be increasing
          
         if (priceChangePercent >= priceHikeThreshold || ( priceChangePercent + prevChangePerc >= combineHikeThreshold && priceChangePercent > 1 )) { 
-          if(prevChangePerc >= priceHikeThreshold -1){
+          if(prevChangePerc >= priceHikeThreshold ){
             sendLogs(`${prefix(id)} recommended return, prev Inc is too much`);
           }else{
           coinsWithHike.push({
@@ -197,6 +197,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
 }
 
 async function checkAndBuy(coinsWithHike,i,id){
+  try{
   let isStillinc = await isStillIncr(coinsWithHike[i], id);
   sendLogs(`${prefix(id)}  isStillinc= ${isStillinc}`);
   if (! isStillinc ){
@@ -211,11 +212,14 @@ async function checkAndBuy(coinsWithHike,i,id){
        console.log(`${prefix(id)}  For Coin ${coinsWithHike[i].symbol} Single Min Hiked, recommended return...`);
        return;
      }
-   sendLogs(`${prefix(id)}  +++++ virtual Coin: ${coinsWithHike[i].symbol} bought at ${ticker1minBack.last_price}. Preparing to sell`)
-   console.log(`virtual Coin: ${coinsWithHike[i].symbol} bought at ${ticker1minBack.last_price} preparing to sell`);
+   sendLogs(`${prefix(id)}  +++++ virtual Coin: ${coinsWithHike[i].symbol} bought at ${coinsWithHike.currentPrice}. Preparing to sell`)
+   console.log(`virtual Coin: ${coinsWithHike[i].symbol} bought at ${coinsWithHike.currentPrice} preparing to sell`);
    //buy at current market
-   coinsWithHike[i].currentPrice=ticker1minBack.last_price;
    greedySell(coinsWithHike[i], id);
+    }
+    catch(error){
+      sendLogs(`${prefix(id)}  error in checkAndBuy: ${error.message}`);
+    }
 
 }
 

@@ -90,7 +90,7 @@
             return fetch(CONSTANT.baseurl + CONSTANT.ticker)
             .then(response => response.json())
             .catch(error => {
-                console.error('An error occurred:', error);
+                console.error('An error occurred in getTicker fun:', error);
                 throw error; 
             });
     }
