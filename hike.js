@@ -5,6 +5,7 @@ import {  startBuyCoinProcess} from "./trans.js";
 import { sendLogs } from "./firebase.js";
 import { getPair, sleep,getPriceHistory } from "./util.js";
 import * as CONSTANT from './Constant.js'
+import { spikeGreedySell } from "./hikeAtOnce.js";
 
 /*
 Target: Some coins suddenly increase by more than 100% or such in few hours/min.
@@ -213,10 +214,14 @@ async function checkAndBuy(coinsWithHike,i,_id){
        console.log(`${prefix(id)}  For Coin ${coinsWithHike[i].symbol} Single Min Hiked, recommended return...`);
        return;
      }
-   sendLogs(`${prefix(id)}  +++++ virtual Coin: ${coinsWithHike[i].symbol} bought at ${coinsWithHike.currentPrice}. Preparing to sell`)
-   console.log(`virtual Coin: ${coinsWithHike[i].symbol} bought at ${coinsWithHike.currentPrice} preparing to sell`);
+   sendLogs(`${prefix(id)}  +++++ virtual Coin: ${coinsWithHike[i].symbol} bought at ${coinsWithHike[i].currentPrice}. Preparing to sell`)
+   console.log(`virtual Coin: ${coinsWithHike[i].symbol} bought at ${coinsWithHike[i].currentPrice} preparing to sell`);
    //buy at current market
-   greedySell(coinsWithHike[i], id);
+   if(coinsWithHike[i].priceChangePercent >20 || coinsWithHike[i].combineChangePercent > 30)
+     spikeGreedySell(coinsWithHike[i], id);
+   else
+    greedySell(coinsWithHike[i], id);
+
     }
     catch(error){
       sendLogs(`${prefix(id)}  error in checkAndBuy: ${error.message}`);
@@ -227,6 +232,7 @@ async function checkAndBuy(coinsWithHike,i,_id){
 
 async function greedySell(coinsWithHike, id){
   try {
+    sendLogs(`${prefix(id)} GreedySell: `);
   const boughtPrice=coinsWithHike.currentPrice;
   const symbol=coinsWithHike.symbol;
 
@@ -243,6 +249,9 @@ async function greedySell(coinsWithHike, id){
   let lastcnt = 0;
   let lastPrice = 100;
   let profitArr=[]
+  let isNegWig = false;
+  let negWigTime =0;
+  let isPriceInc = false;
 
 
   // Fetch ticker data every 3 seconds
@@ -267,7 +276,6 @@ async function greedySell(coinsWithHike, id){
 
       if (currentPrice != undefined) {
 
-          //sell coin and replace sold coin price with currentPrice
           const percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
           if ( percentageEarned >= 3 || percentageEarned < maxLossAccepted ){  // if price is bw -8 to 3 then do nothing, hope coin to inc more than 3%
 
@@ -279,9 +287,17 @@ async function greedySell(coinsWithHike, id){
                   maxLossAccepted = -2;
                 } 
                 if(currentPrice < lastPrice && percentageEarned >= 2.7){
-                sendLogs(`${prefix(_id)} Being Greedy: perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} currentPrice: ${currentPrice}`);
-                beGreedy(coinsWithHike,_id,-0.5);
+                  isPriceInc = false
+                  if(profitArr.length >3 && (profitArr[2]- profitArr[1] < -5 || profitArr[3]- profitArr[0] < -5 )){
+                    sendLogs(`${prefix(_id)} seems to be -ve wick, so skipping sell.`);
+                  }else{
+                  sendLogs(`${prefix(_id)} Being Greedy: perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} currentPrice: ${currentPrice}`);
+                  beGreedy(coinsWithHike,_id,-0.5);
                   clearInterval(intervalId);
+                  }
+                }else{
+                  isPriceInc =true;
+                
                 }
                 lastPrice = currentPrice;
                 lastcnt = cnt;
@@ -289,20 +305,26 @@ async function greedySell(coinsWithHike, id){
               }
 
               profitArr.push(percentageEarned);
-              if(profitArr.length >2){
-              profitArr=profitArr.slice(-3);
+              if(profitArr.length >3){
+              profitArr=profitArr.slice(-4);
               if( profitArr[2] -profitArr[0] >= 7){   // increased suddenly
                 sendLogs(`${prefix(_id)} seems to be wick, so selling. Sum of last 3 percEarned: ${profitArr[2] - profitArr[0]}`);
                 beGreedy(coinsWithHike,_id,-1);
-            }
-
-            if(profitArr[2]- profitArr[1] < -5 || profitArr[2]- profitArr[0] < -5 ){ // decreased suddenly.
-              targetProfit =3;
-              maxLossAccepted = -6;
+                clearInterval(intervalId);
             }
             }
 
             }
+
+            
+            if(profitArr.length >3 && (profitArr[2]- profitArr[1] < -5 || profitArr[3]- profitArr[0] < -5 )){ // decreased suddenly.
+              isNegWig =true;
+              negWigTime = cnt;
+              sendLogs(`${prefix(_id)} seems to be -ve wick, so skipping. Sum of last 3 percEarned: ${profitArr[2] - profitArr[0]}`);
+            }
+
+            if(negWigTime + 4 < cnt)
+              isNegWig =false;
 
             if(moreThan3cnt >= 4){
               maxLossAccepted = -3;
@@ -311,26 +333,16 @@ async function greedySell(coinsWithHike, id){
               sendLogs(`${prefix(_id)} more than 3 = true: ${percentageEarned.toFixed(3)}`);
             }
 
-            if(percentageEarned >= targetProfit || percentageEarned < maxLossAccepted){
-          
-              if( percentageEarned < maxLossAccepted){
-                // sell if waited for appr. 2hrs bw -8 to -11 or it is more than 30 min or too much of loss
-              sell(intervalId,_id,symbol,boughtPrice,currentPrice," ",percentageEarned,cntLoss,cntLossRestore,cnt)
-            }else{
+            if((percentageEarned >= targetProfit || percentageEarned < maxLossAccepted) && !isNegWig && !isPriceInc){  // Extreme case.
+
               sendLogs(`${prefix(_id)} inside greedy sell: targetProfit: ${targetProfit} percentageEarned: ${percentageEarned}`); 
-              if(targetProfit <= 3)
                 beGreedy(coinsWithHike,_id,-0.3);
-              else if (targetProfit >= 7)
-                beGreedy(coinsWithHike,_id,-1.5);
-              else
-              beGreedy(coinsWithHike,_id,-1);
- 
-              clearInterval(intervalId);
+                clearInterval(intervalId);
              }
 
             }
          
-            sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} with (>3% or <-8%) cnt: ${cnt} current price: ${currentPrice} Percentage Earned: ${percentageEarned.toFixed(3)} targetProfit: ${targetProfit}`);
+            sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} with (>3% or <-8%) cnt: ${cnt} current price: ${currentPrice} Percentage Earned: ${percentageEarned.toFixed(3)} targetProfit: ${targetProfit} isNegWig: ${isNegWig}`);
           }
          else{
           sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} cnt: ${cnt}, pending Percentage Earned: ${percentageEarned.toFixed(3)} cntLossRestore: ${cntLossRestore}`);
@@ -342,8 +354,7 @@ async function greedySell(coinsWithHike, id){
             }
             moreThan3cnt = 0;
         } 
-        
-      }
+
     } catch (error) {
       console.error('An error occurred:', error);
       sendLogs(`${prefix(id)} error in greedySell function inside scheduler: ${error.message}`);
@@ -559,7 +570,7 @@ function sell(intervalId,id,symbol,boughtPrice,currentPrice,maxPrice,percentageE
  clearInterval(intervalId);
 }
 
-function prefix(id){
+export function prefix(id){
 return `id: ${id} ${getTime()}: `;
 }
 
