@@ -1,6 +1,6 @@
 import { getCandleChart, getINRbalance,getTicker } from "./ApiInfo.js";
 import { activeOrders, sellCoins } from "./trans.js";
-import { buildPair, daysPassedSince, generateLossOrderId, getStoredJson, moveOrderIdToSell } from "./util.js";
+import { buildPair, daysPassedSince, generateLossOrderId, getStoredJson, moveOrderIdToSell, updateFlatCoinsList } from "./util.js";
 import * as CONSTANT from "./Constant.js"; 
 import { convertPairIntoCoindcxName,getMiscData,saveMiscResults,sleep,updatePriceHistory,getPriceHistory} from "./util.js";
 import { sendEmail } from "./Email.js";
@@ -33,8 +33,11 @@ async function hikeScheduler() {
   }
 
   const lag1min=await getTicker();
-  await updatePriceHistory(ticker5minAgo); // in file system
-  updatePriceHistoryInFirebase(); // in firebase    ** Race condition** Need to run before running coinHiked.
+  await updatePriceHistory(ticker5minAgo); // in file system  ** Race condition** Need to run before running coinHiked.
+  updatePriceHistoryInFirebase(); // in firebase   
+  if(id % 2 == 0){ 
+   updateFlatCoinsList();
+  }
   await sleep(1000*60); // sleep for 1 minute
 
   coinHiked(ticker5minAgo,ticker10minAgo,lag1min,id);

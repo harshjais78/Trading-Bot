@@ -3,7 +3,7 @@ const app= express();
 import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
-import { getStoredJson } from './util.js';
+import { flatCoins, getStoredJson } from './util.js';
 import './schedule.js'
 import './socket-acc.js'
 import * as CONSTANT from './Constant.js'
@@ -29,6 +29,7 @@ app.get('/check', async (req, res) => {
         const ph = await getStoredJson(CONSTANT.priceHistory);
         res.status(200).send({
             // "short-term":st, "sudden fall": sf,
+            "FlatCoinsList": flatCoins,
             "priceHistory":ph});  
     } catch (error) {
         console.error('An error occurred:', error);
