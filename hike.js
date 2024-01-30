@@ -6,6 +6,7 @@ import { sendLogs } from "./firebase.js";
 import { getPair, sleep,getPriceHistory } from "./util.js";
 import * as CONSTANT from './Constant.js'
 import { spikeGreedySell } from "./hikeAtOnce.js";
+import { slowRiseBuyCheck } from "./slowRise.js";
 
 /*
 Target: Some coins suddenly increase by more than 100% or such in few hours/min.
@@ -53,6 +54,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
     let prevChangePerc = 0;
     let price20minBack=0;
     let matched=true;
+    let slowRiseCoins=[];
 
     currentTicker.forEach((currentCoin,idx) => {
       const symbol = currentCoin.market;
@@ -131,6 +133,17 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
             price20minBack,
           });
         }
+
+          if(priceChangePercent >= 4.6 && priceChangePercent <= recheckThreshold +1){
+            slowRiseCoins.push({
+              symbol,
+              curr10minDeltaPerc: priceChangePercent.toFixed(3),
+              combineChangePercent: (prevChangePerc+priceChangePercent).toFixed(3),
+              currentPrice,
+              previousPrice,
+              price20minBack
+            });
+          }
       }
 
       price20minBack=0;
@@ -143,6 +156,10 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
   }else{
     sendLogs(`${prefix(id)}  matched`);
     console.log(`id: ${id}  matched`);
+    }
+
+    if(slowRiseCoins.length > 0){
+    slowRiseBuyCheck(slowRiseCoins, id);
     }
 
     if(coinsWithHike.length > 0) {
@@ -244,7 +261,7 @@ async function greedySell(coinsWithHike, id){
   let _id=id;
   let isMoreThan3 =false;
   let moreThan3cnt = 0;
-  let maxLossAccepted = -8;
+  let maxLossAccepted = -10;
   let targetProfit = 7;
   let lastcnt = 0;
   let lastPrice = 100;
@@ -286,11 +303,11 @@ async function greedySell(coinsWithHike, id){
                 if(currentPrice < lastPrice){
                   maxLossAccepted = -2;
                 } 
-                if(currentPrice < lastPrice && percentageEarned >= 2.7){
+                if(currentPrice < lastPrice ){
                   isPriceInc = false
                   if(profitArr.length >3 && (profitArr[2]- profitArr[1] < -5 || profitArr[3]- profitArr[0] < -5 )){
                     sendLogs(`${prefix(_id)} seems to be -ve wick, so skipping sell.`);
-                  }else{
+                  }else if( percentageEarned >= 2.7){
                   sendLogs(`${prefix(_id)} Being Greedy: perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} currentPrice: ${currentPrice}`);
                   beGreedy(coinsWithHike,_id,-0.5);
                   clearInterval(intervalId);
@@ -304,6 +321,7 @@ async function greedySell(coinsWithHike, id){
                 sendLogs(`${prefix(_id)} After 21 sec perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} `);
               }
 
+              // Wig checking process
               profitArr.push(percentageEarned);
               if(profitArr.length >3){
               profitArr=profitArr.slice(-4);
@@ -312,18 +330,20 @@ async function greedySell(coinsWithHike, id){
                 beGreedy(coinsWithHike,_id,-1);
                 clearInterval(intervalId);
             }
+            sendLogs(`${prefix(_id)} profitArr: ${profitArr.toString()}`);
             }
 
             }
 
-            
-            if(profitArr.length >3 && (profitArr[2]- profitArr[1] < -5 || profitArr[3]- profitArr[0] < -5 )){ // decreased suddenly.
+            // decreased suddenly.
+            if(profitArr.length >3 && (profitArr[2]- profitArr[1] < -5 || profitArr[3]- profitArr[0] < -5 )){ 
               isNegWig =true;
               negWigTime = cnt;
               sendLogs(`${prefix(_id)} seems to be -ve wick, so skipping. Sum of last 3 percEarned: ${profitArr[2] - profitArr[0]}`);
             }
 
-            if(negWigTime + 4 < cnt)
+            // Reset -ve wig after 6*3 sec.
+            if(negWigTime + 6 < cnt)
               isNegWig =false;
 
             if(moreThan3cnt >= 4){

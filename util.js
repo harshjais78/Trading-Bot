@@ -178,7 +178,7 @@ export function timestampToDay(timestamp) {
 
 
   const MAX_COIN_HISTORY = 140; 
-const PRICE_HISTORY_FILE = path.join(__dirname, "/fs/priceHistory.json");
+ export const PRICE_HISTORY_FILE = path.join(__dirname, "/fs/priceHistory.json");
 
 export async function updatePriceHistory(coinsData) {
     try {
@@ -248,4 +248,54 @@ export async function getPriceHistory(market) {
         // Handle errors appropriately (e.g., throw an error, return a default value)
         sendLogs('Failed to retrieve price history. Error: ' + error.message);
     }
+}
+
+export let flatCoins = [];
+export async function updateFlatCoinsList() {
+  let priceHistoryList;
+  while (!priceHistoryList) {
+    try {
+      // Read price history from the local file
+      const filePath = path.resolve(__dirname, PRICE_HISTORY_FILE);
+      const fileData = await fs.promises.readFile(filePath, "utf-8");
+      priceHistoryList = JSON.parse(fileData);
+    } catch (error) {
+      console.error("Error:", error);
+      sendLogs(
+        "Failed to retrieve price history in updateFlatCoinsList. Error: " +
+          error.message
+      );
+      await sleep(1000); //avoiding race condition
+    }
+  }
+
+  for (const symbol in priceHistoryList) {
+    try{
+   
+    let priceHistory=  priceHistoryList[symbol];
+      // console.log(`Key: ${symbol}, Value: ${JSON.stringify(priceHistory)}`);
+      priceHistory = priceHistory.slice(0,-12);
+      
+      if(priceHistory && priceHistory.length > 6){
+        let temp=priceHistory[0];
+    
+        for(let i=1; i<priceHistory.length; i++){
+          if( ( (Math.abs(temp - priceHistory[i]) * 100 )/ Math.min(temp,priceHistory[i])) > 4.1 ){
+           continue;
+          }
+        temp = priceHistory[i];
+      }
+
+       priceHistory.sort((a, b) => b - a); // desc remember original array is modified.
+       if( priceHistory.length > 49 && ((0.12 * priceHistory[50]) + priceHistory[50] ) < priceHistory[0]) {  // max till now should be lesser 15%
+        continue;
+      }
+    
+      flatCoins.push(symbol)
+    }
+    } catch (error) {sendLogs( `${prefix(id)} Catch error in updateFlatCoinsList: ${error}` );}    
+    }
+
+ 
+
 }

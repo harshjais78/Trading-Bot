@@ -265,8 +265,8 @@ export async function spikeGreedySell(coinsWithHike, id){
 
           //sell coin and replace sold coin price with currentPrice
           let percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
-          if(cnt > 0) {
-            sendLogs(`${prefix(_id)} Enough time given, Selling, ${cnt} Earned, ${percentageEarned}`);
+          if(cnt > 150) {
+            sendLogs(`${prefix(_id)} Enough time given, Selling, cnt: ${cnt} Earned, ${percentageEarned}`);
             
         }
           if ( percentageEarned >= 3 || percentageEarned < maxLossAccepted ){  // if price is bw -8 to 3 then do nothing, hope coin to inc more than 3%
@@ -285,7 +285,7 @@ export async function spikeGreedySell(coinsWithHike, id){
                 if(currentPrice < lastPrice){
                   maxLossAccepted = -5;
                 } 
-                if(currentPrice < lastPrice && percentageEarned >= 2.7){
+                if(currentPrice < lastPrice){
                     if(profitArr.length > 3 && (profitArr[3]- profitArr[1] < -15 ||  profitArr[3]- profitArr[0] < -15 )){ // decreased suddenly.
                         sendLogs(`${prefix(_id)} seems to be -ve wick,so skipping selling part. Sum of last 3 percEarned: ${profitArr[0]} ${profitArr[1]}  ${profitArr[2]}  ${profitArr[3]}`);
                     }else{
@@ -298,16 +298,17 @@ export async function spikeGreedySell(coinsWithHike, id){
             }
                 lastPrice = currentPrice;
                 lastcnt = cnt;
-                sendLogs(`${prefix(_id)} After 21 sec perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} `);
+                sendLogs(`${prefix(_id)} After 2 min perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} `);
               }
 
               profitArr.push(percentageEarned);
               if(profitArr.length >3){
               profitArr=profitArr.slice(-4);
-              if( profitArr[2] -profitArr[0] >= 17){   // increased suddenly
+              sendLogs(`${prefix(_id)} profitArr: ${profitArr.toString()}`);
+              if( profitArr[2] -profitArr[0] >= 15 || profitArr[3] - profitArr[0] >= 15){   // increased suddenly
                 sendLogs(`${prefix(_id)} seems to be wick, so selling. Sum of last 3 percEarned: ${profitArr[2] - profitArr[0]}`);
                 beGreedy(coinsWithHike,_id,-1);
-            }else if(profitArr.length> 3 && (profitArr[3]- profitArr[1] < -15 ||  profitArr[3]- profitArr[0] < -15 )){ // decreased suddenly.
+            }else if(profitArr.length > 3 && (profitArr[3]- profitArr[1] < -15 ||  profitArr[3]- profitArr[0] < -15 )){ // decreased suddenly.
                 sendLogs(`${prefix(_id)} seems to be -ve wick,so skipping selling part. Sum of last 3 percEarned: ${profitArr[0]} ${profitArr[1]}  ${profitArr[2]}  ${profitArr[3]}`);
                 return;
             }
@@ -315,7 +316,7 @@ export async function spikeGreedySell(coinsWithHike, id){
             if(is1minInc){
                 sendLogs(`${prefix(_id)} 1min candle is still increasing, so skip selling. Earned ${percentageEarned}`);
                 return; // increase as far as possible.
-}
+            }
             }
 
             if(moreThan3cnt >= 4){
@@ -427,10 +428,10 @@ async function beGreedy(coinsWithHike, id, maxGreedy){
 
 
 function sell(intervalId,id,symbol,boughtPrice,currentPrice,maxPrice,percentageEarned,cntLoss,cntLossRestore,cnt){
-  sendLogs(`${prefix(id)}  For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% cntLoss: ${cntLoss} cntLossRestore: ${cntLossRestore} cnt: ${cnt}`);
+  sendLogs(`${prefix(id)} GreedySpike, For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% cntLoss: ${cntLoss} cntLossRestore: ${cntLossRestore} cnt: ${cnt}`);
   console.log(`For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice} Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
   sendLogs(`${prefix(id)} ----------------------------------------------------------`);
-  sendEmail(`From Hike, for coin: ${symbol}, \nBought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% `)
+  sendEmail(`From GreedySpike, for coin: ${symbol}, \nBought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% `)
  //clear the interval
  clearInterval(intervalId);
 }
