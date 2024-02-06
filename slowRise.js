@@ -42,13 +42,15 @@ export async function slowRiseBuyCheck(coinsArray,_id) {
        let priceBefore = priceHistory[symbol]; 
        if(priceBefore){
         let priceAtSomePoint = priceBefore[priceBefore - 17];
-        if(coin.currentPrice > priceAtSomePoint + (0.15 * priceAtSomePoint)){
+        if(coin.currentPrice > priceAtSomePoint + (0.14 * priceAtSomePoint)){ // if price have increased more than 14 perc. from some point in past.
           sendLogs(`${prefix(id)}  +++++ virtual Coin: ${coinsWithHike[i].symbol} bought at ${coinsWithHike[i].currentPrice} with slowRiseAlgo. Preparing to sell`)
           targetSell(coin,id,4);
+        }else {sendLogs(`${prefix(id)} ${symbol} priceAtSomePoint: ${priceAtSomePoint} is more than 15%`);}
+
         }
-        }
-      }
-    }
+      }else {sendLogs(`${prefix(id)} ${symbol} have volume 0`);}
+
+    }else { sendLogs(`${prefix(id)} ${symbol} is not in flatCoin list`);}
     }
   }
 }catch(error){

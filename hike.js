@@ -159,6 +159,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
     }
 
     if(slowRiseCoins.length > 0){
+    sendLogs(`${prefix(id)} slowRise List: ${JSON.stringify(slowRiseCoins)}`);
     slowRiseBuyCheck(slowRiseCoins, id);
     }
 
