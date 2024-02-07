@@ -272,6 +272,7 @@ export async function spikeGreedySell(coinsWithHike, id){
 
         if(percentageEarned >= 3.6 || percentageEarned <maxLossAccepted){
           beGreedy(coinsWithHike,_id,0);
+          clearInterval(intervalId);
         }
           sendLogs(`${prefix(_id)} inside spikeGreedySell: price: ${currentPrice}  percentageEarned: ${percentageEarned}`); 
 

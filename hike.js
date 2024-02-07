@@ -401,31 +401,37 @@ async function greedySell(coinsWithHike, id){
 
 async function isStillIncr( coinsWithHike, id ){
   let symbol = coinsWithHike.symbol;
+  let shouldReturn = false;
   try {
   let priceHistory= await getPriceHistory(coinsWithHike.symbol);
   if(priceHistory && priceHistory.length > 6){
-    let price30minBack = priceHistory[priceHistory.length -6];
+    let price30minBack = priceHistory[priceHistory.length -8];
     let arr= priceHistory.slice(0, -6);
     let temp=arr[0];
 
     for(let i=1; i<arr.length; i++){
-      if( ( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])) > 3.5 ){
+      if( ( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])) > 5.5 ){
         sendLogs( `${prefix(id)} recommended return for coin: ${coinsWithHike.symbol}, might have incerased already candle length: ${( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])).toFixed(3)}% `);
-       break;
+       shouldReturn = true;
+        break;
       }
     temp = arr[i];
   }
 
    priceHistory = priceHistory.slice(0,-4);
    priceHistory.sort((a, b) => b - a); // desc remember original array is modified.
-   if( ((0.15 * priceHistory[0]) + priceHistory[0] ) >= coinsWithHike.currentPrice) {  // max till now should be lesser 15%
+   if( ((0.07 * priceHistory[0]) + priceHistory[0] ) >= coinsWithHike.currentPrice) {  // max till now should be lesser 15%
     let check = priceHistory.slice(0,10).toString();
-    sendLogs( `${prefix(id)} recommended return for coin: ${coinsWithHike.symbol}, might have incerased already max price: ${priceHistory[0]}, history: ${check}` );
+    sendLogs( `${prefix(id)} recommended return coin: ${coinsWithHike.symbol}, might have incerased already max price: ${priceHistory[0]}, history: ${check}` );
   }
 
-  if( ( (coinsWithHike.price20minBack - price30minBack) * 100 / price30minBack ) > 10){
-     // create reat opportunity.
+  if( ( (coinsWithHike.price20minBack - price30minBack) * 100 / price30minBack ) > 15){
     sendLogs( `${prefix(id)} recommended return for coin: ${coinsWithHike.symbol}, You have missed right time to buy. Recently incr. ${((coinsWithHike.price20minBack - price30minBack )* 100 / price30minBack).toFixed(3)  }%` );
+   shouldReturn =true;
+  }
+
+  if(shouldReturn) {
+   return true; // Coin will be not bought
   }
 }
 } catch (error) {sendLogs( `${prefix(id)} Catch error: ${error}` );}
