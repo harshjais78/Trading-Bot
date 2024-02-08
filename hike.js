@@ -405,12 +405,12 @@ async function isStillIncr( coinsWithHike, id ){
   try {
   let priceHistory= await getPriceHistory(coinsWithHike.symbol);
   if(priceHistory && priceHistory.length > 6){
-    let price30minBack = priceHistory[priceHistory.length -8];
+    let price30minBack = priceHistory[priceHistory.length -15];
     let arr= priceHistory.slice(0, -6);
     let temp=arr[0];
 
     for(let i=1; i<arr.length; i++){
-      if( ( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])) > 5.5 ){
+      if( ( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])) > (5.5*coinsWithHike.combineChangePercent)/17 ){
         sendLogs( `${prefix(id)} recommended return for coin: ${coinsWithHike.symbol}, might have incerased already candle length: ${( (Math.abs(temp - arr[i]) * 100 )/ Math.min(temp,arr[i])).toFixed(3)}% `);
        shouldReturn = true;
         break;
@@ -420,7 +420,7 @@ async function isStillIncr( coinsWithHike, id ){
 
    priceHistory = priceHistory.slice(0,-4);
    priceHistory.sort((a, b) => b - a); // desc remember original array is modified.
-   if( ((0.07 * priceHistory[0]) + priceHistory[0] ) >= coinsWithHike.currentPrice) {  // max till now should be lesser 15%
+   if( ((0.07 * priceHistory[0]) + priceHistory[0] ) >= coinsWithHike.currentPrice) {  // max till now should be lesser 7%
     let check = priceHistory.slice(0,10).toString();
     sendLogs( `${prefix(id)} recommended return coin: ${coinsWithHike.symbol}, might have incerased already max price: ${priceHistory[0]}, history: ${check}` );
   }
@@ -431,7 +431,7 @@ async function isStillIncr( coinsWithHike, id ){
   }
 
   if(shouldReturn) {
-   return true; // Coin will be not bought
+   return false; // Coin will not be bought
   }
 }
 } catch (error) {sendLogs( `${prefix(id)} Catch error: ${error}` );}
