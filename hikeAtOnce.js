@@ -1,5 +1,5 @@
 import { getCandleChart,getMarketDetails,getTicker } from "./ApiInfo.js";
-import { sendEmail } from "./Email.js";
+import { sendEmail, sendErrorMail } from "./Email.js";
 import fetch from 'node-fetch'; 
 import {  startBuyCoinProcess} from "./trans.js";
 import { sendLogs } from "./firebase.js";
@@ -356,11 +356,14 @@ export async function spikeGreedySell(coinsWithHike, id){
     } catch (error) {
       console.error('An error occurred:', error);
       sendLogs(`${prefix(id)} error in greedySell function inside scheduler: ${error.message}`);
+      sendErrorMail(`Found Error: in greedySell function inside scheduler in hikeAtOnce ${error.message}` );
+
     }
   }, 60*1000); // 3 seconds in milliseconds
 }catch (error) {
   console.log('An error occurred:', error);
   sendLogs(`${prefix(id)} error in greedySell function: ${error.message}`);
+  sendErrorMail(`Found Error: in greedySell function in hikeAtOnce ${error.message}` );
 
 }
 }
@@ -430,6 +433,8 @@ async function beGreedy(coinsWithHike, id, maxGreedy){
     // }, 3000); // 3 seconds in milliseconds
   }catch (error) {
     console.log('An error occurred:', error);
+    sendErrorMail(`Found Error: in beGreedy function in hikeAtOnce ${error.message}` );
+
   }
 }
 

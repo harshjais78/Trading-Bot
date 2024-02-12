@@ -1,5 +1,5 @@
 import { getCandleChart,getMarketDetails,getTicker } from "./ApiInfo.js";
-import { sendEmail } from "./Email.js";
+import { sendEmail, sendErrorMail } from "./Email.js";
 import fetch from 'node-fetch'; 
 import {  startBuyCoinProcess} from "./trans.js";
 import { sendLogs } from "./firebase.js";
@@ -212,6 +212,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
   } catch (error) {
     console.error('An error occurred:', error);
     sendLogs(`${prefix(id)} error in checkPriceHike function: ${error.message}`);
+    sendErrorMail(`Found Error: in checkPriceHike function ${error.message}` );
   }
 }
 
@@ -244,6 +245,8 @@ async function checkAndBuy(coinsWithHike,i,_id){
     catch(error){
       sendLogs(`${prefix(id)}  error in checkAndBuy: ${error.message}`);
       console.log(error);
+      sendErrorMail(`Found Error: in checkAndBuy function ${error.message}` );
+
     }
 
 }
@@ -379,11 +382,14 @@ async function greedySell(coinsWithHike, id){
     } catch (error) {
       console.error('An error occurred:', error);
       sendLogs(`${prefix(id)} error in greedySell function inside scheduler: ${error.message}`);
+      sendErrorMail(`Found Error: in greedySell function ${error.message}` );
+
     }
   }, 3000); // 3 seconds in milliseconds
 }catch (error) {
   console.log('An error occurred:', error);
   sendLogs(`${prefix(id)} error in greedySell function: ${error.message}`);
+  sendErrorMail(`Found Error: in greedySell function2 ${error.message}` );
 
 }
 }
@@ -434,7 +440,7 @@ async function isStillIncr( coinsWithHike, id ){
    return false; // Coin will not be bought
   }
 }
-} catch (error) {sendLogs( `${prefix(id)} Catch error: ${error}` );}
+} catch (error) {sendLogs( `${prefix(id)} Catch error: ${error}` ); sendErrorMail(`Found Error: in isStillInc ${error}` );}
 
 //------------------------------------------------------------------------------
 
@@ -526,6 +532,8 @@ async function beGreedy(coinsWithHike, id, maxGreedy){
     // }, 3000); // 3 seconds in milliseconds
   }catch (error) {
     console.log('An error occurred:', error);
+    sendErrorMail(`Found Error: in beGreedy function ${error.message}` );
+
   }
 }
 

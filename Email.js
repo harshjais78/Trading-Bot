@@ -1,19 +1,41 @@
-import crypto from 'crypto';
 import fetch from 'node-fetch'; 
 
+let service_id = 'Coindcx alert'//uncomment this to use the service
+let template_id =  'template_rpcqp5h'
+let user_id = 'C1wF5QXy4IUHVBrql'
+let accessToken = 'O342h4LQQ7DlYj1EaBP8K'
 
 export async function sendEmail (message){
 const data = {
-   service_id: 'Coindcx alert', //uncomment this to use the service
-    template_id: 'template_rpcqp5h',
-    user_id: 'C1wF5QXy4IUHVBrql',
+   service_id , 
+    template_id,
+    user_id ,
     template_params: {
         to_name: 'Harsh',
         message: message
         
     },
-    accessToken:'O342h4LQQ7DlYj1EaBP8K'
+    accessToken
 };
+sendData(data)
+}
+
+export async function sendErrorMail (message){
+    const data = {
+        service_id , 
+         template_id,
+         user_id ,
+         template_params: {
+             to_name: 'Harsh',
+             message: message
+             
+         },
+         accessToken
+     };
+     sendData(data)
+}
+
+async function sendData(data){
 
 fetch('https://api.emailjs.com/api/v1.0/email/send', {
     method: 'POST',
@@ -30,3 +52,4 @@ fetch('https://api.emailjs.com/api/v1.0/email/send', {
     console.error('Fetch error:', error);
 });
 }
+

@@ -70,7 +70,6 @@ async function targetSell(coinsWithHike, id, targetProfit){
   let maxLossAccepted = -10;
 
 
-
   // Fetch ticker data every 3 seconds
   const intervalId = setInterval(async () => {
     try {

@@ -3,7 +3,7 @@ import { activeOrders, sellCoins } from "./trans.js";
 import { buildPair, daysPassedSince, generateLossOrderId, getStoredJson, moveOrderIdToSell, updateFlatCoinsList } from "./util.js";
 import * as CONSTANT from "./Constant.js"; 
 import { convertPairIntoCoindcxName,getMiscData,saveMiscResults,sleep,updatePriceHistory,getPriceHistory} from "./util.js";
-import { sendEmail } from "./Email.js";
+import { sendEmail, sendErrorMail } from "./Email.js";
 import {getCoinReadyToBuy} from "./short-term.js";
 import { suddenFallAlgo } from "./suddenfall.js";
 import { coinHiked, getTime } from "./hike.js";
