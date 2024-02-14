@@ -273,6 +273,7 @@ async function greedySell(coinsWithHike, id){
   let isNegWig = false;
   let negWigTime =0;
   let isPriceInc = false;
+  let sec21decreaseCnt = 0;
 
 
   // Fetch ticker data every 3 seconds
@@ -303,18 +304,23 @@ async function greedySell(coinsWithHike, id){
             moreThan3cnt++;
             if(isMoreThan3){
               targetProfit = 10;
-              if(lastcnt + 7 <= cnt ){ // after 21 sec
+              if(lastcnt + 15 <= cnt ){ // after 45 sec
                 if(currentPrice < lastPrice){
                   maxLossAccepted = -2;
                 } 
                 if(currentPrice < lastPrice ){
                   isPriceInc = false
-                  if(profitArr.length >3 && (profitArr[2]- profitArr[1] < -5 || profitArr[3]- profitArr[0] < -5 )){
+                  if(profitArr.length >3 && (profitArr[2]- profitArr[1] < -3.3 || profitArr[3]- profitArr[0] < -3.3 )){
                     sendLogs(`${prefix(_id)} seems to be -ve wick, so skipping sell.`);
                   }else if( percentageEarned >= 2.7){
+                    // if(sec21decreaseCnt++ > 1){
                   sendLogs(`${prefix(_id)} Being Greedy: perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} currentPrice: ${currentPrice}`);
                   beGreedy(coinsWithHike,_id,-0.5);
                   clearInterval(intervalId);
+                    }
+                  //   else 
+                  // sendLogs(`${prefix(_id)} sec21decreaseCnt ${sec21decreaseCnt-1} perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} currentPrice: ${currentPrice}`);
+
                   }
                 }else{
                   isPriceInc =true;
@@ -322,13 +328,13 @@ async function greedySell(coinsWithHike, id){
                 }
                 lastPrice = currentPrice;
                 lastcnt = cnt;
-                sendLogs(`${prefix(_id)} After 21 sec perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} `);
+                sendLogs(`${prefix(_id)} After 45 sec perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} `);
               }
 
               // Wig checking process
               profitArr.push(percentageEarned);
-              if(profitArr.length >3){
-              profitArr=profitArr.slice(-4);
+              if(profitArr.length >5){
+              profitArr=profitArr.slice(-6);
               if( profitArr[2] -profitArr[0] >= 7){   // increased suddenly
                 sendLogs(`${prefix(_id)} seems to be wick, so selling. Sum of last 3 percEarned: ${profitArr[2] - profitArr[0]}`);
                 beGreedy(coinsWithHike,_id,-1);
@@ -340,7 +346,7 @@ async function greedySell(coinsWithHike, id){
             }
 
             // decreased suddenly.
-            if(profitArr.length >3 && (profitArr[2]- profitArr[1] < -5 || profitArr[3]- profitArr[0] < -5 )){ 
+            if(profitArr.length >3 && (profitArr[3]- profitArr[1] < -3.7 || profitArr[5]- profitArr[0] < -3.7 )){ 
               isNegWig =true;
               negWigTime = cnt;
               sendLogs(`${prefix(_id)} seems to be -ve wick, so skipping. Sum of last 3 percEarned: ${profitArr[2] - profitArr[0]}`);
@@ -364,10 +370,9 @@ async function greedySell(coinsWithHike, id){
                 clearInterval(intervalId);
              }
 
-            }
+           
          
-            sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} with (>3% or <-8%) cnt: ${cnt} current price: ${currentPrice} Percentage Earned: ${percentageEarned.toFixed(3)} targetProfit: ${targetProfit} isNegWig: ${isNegWig}`);
-          }
+            }
          else{
           sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} cnt: ${cnt}, pending Percentage Earned: ${percentageEarned.toFixed(3)} cntLossRestore: ${cntLossRestore}`);
           cntLossRestore++;
@@ -378,6 +383,7 @@ async function greedySell(coinsWithHike, id){
             }
             moreThan3cnt = 0;
         } 
+        sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} with (>3% or <-8%) cnt: ${cnt} current price: ${currentPrice} Percentage Earned: ${percentageEarned.toFixed(3)} targetProfit: ${targetProfit} isNegWig: ${isNegWig}`);
 
     } catch (error) {
       console.error('An error occurred:', error);
