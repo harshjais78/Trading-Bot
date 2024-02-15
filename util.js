@@ -230,9 +230,9 @@ export async function updatePriceHistory(coinsData) {
         }
         console.log("done with price history update")
     } catch (error) {
-        console.error(`Failed to updatePriceHistory at i:${i} Error: ' + ${error} ${coinsData}`);
-        sendLogs(`current prices:\n ${currentPrices}`);
-        sendLogs(`Failed to updatePriceHistory at i:${i} of total length ${coinsData.length} Error: ' + ${error.message} ${coinsData}`);
+        console.error(`Failed to updatePriceHistory at i:${i} Error: ' + ${error} ${JSON.stringify(coinsData)}`);
+        sendLogs(`current prices:\n ${JSON.stringify(currentPrices)}`);
+        sendLogs(`Failed to updatePriceHistory at i:${i} of total length ${coinsData.length} Error: ' + ${error.message} ${JSON.stringify(coinsData)}`);
 
     }
 }
