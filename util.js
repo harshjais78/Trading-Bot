@@ -205,7 +205,7 @@ export async function updatePriceHistory(coinsData) {
             const { market, last_price } = coin;
             i++;
 
-            if (market && last_price !== undefined) {
+            if (market != 'BTCINR_insta' && last_price !== undefined) {
                 // Initialize an array for the coin if it doesn't exist
                 if (!currentPrices[market] || currentPrices[market] == undefined) {
                   console.log(`currentPrices[market] = ${currentPrices[market]}`)
@@ -299,7 +299,7 @@ export async function updateFlatCoinsList() {
     
       flatCoins.push(symbol)
     }
-    } catch (error) {sendLogs( `${prefix(id)} Catch error in updateFlatCoinsList: ${error}` );}    
+    } catch (error) {sendLogs( ` Catch error in updateFlatCoinsList: ${error}` );}    
     }
 
  

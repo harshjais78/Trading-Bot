@@ -81,7 +81,7 @@ async function runScheduled() {
             console.log(`URL ${baseurl} is reachable. Status Code: ${response.status}`);
           } else {
             console.error(`URL ${baseurl} returned an error. Status Code: ${response.status}`);
-            if( !response.status.includes('520')) {
+            if( !response.status.toString().includes('520')) {
             sendEmail(`${baseurl} have some Error. Status Code: ${response.status}`);
             }
           }
