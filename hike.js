@@ -416,7 +416,7 @@ async function isStillIncr( coinsWithHike, id ){
   let shouldReturn = false;
   try {
   let priceHistory= await getPriceHistory(coinsWithHike.symbol);
-  if(priceHistory && priceHistory.length > 6){
+  if(priceHistory && priceHistory.length > 15){
     let price30minBack = priceHistory[priceHistory.length -15];
     let arr= priceHistory.slice(0, -6);
     let temp=arr[0];
