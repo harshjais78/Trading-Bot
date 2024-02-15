@@ -208,7 +208,7 @@ export async function updatePriceHistory(coinsData) {
             if (market != 'BTCINR_insta' && last_price !== undefined) {
                 // Initialize an array for the coin if it doesn't exist
                 if (!currentPrices[market] || currentPrices[market] == undefined) {
-                  console.log(`currentPrices[market] = ${currentPrices[market]}`)
+                  console.log(`currentPrices[market] = ${currentPrices[market]} & market = ${market}`)
                     currentPrices[market] = [];
                 }
 
