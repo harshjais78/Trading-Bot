@@ -213,7 +213,7 @@ export async function updatePriceHistory(coinsData) {
                     console.log(`currentPrices[market] = ${currentPrices[market]} & market = ${market}`)
                 }
 
-                console.log(`currentPrices[market] = ${currentPrices[market]} : market = ${market} lastPrice = ${last_price}`)
+                // console.log(`currentPrices[market] = ${currentPrices[market]} : market = ${market} lastPrice = ${last_price}`)
                 // Append the new price to the array
                 currentPrices[market].push(last_price);
 
