@@ -210,7 +210,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
   }
 
   } catch (error) {
-    console.error('An error occurred:', error);
+    console.error('An error occurred in checkPriceHike funtion:', error);
     sendLogs(`${prefix(id)} error in checkPriceHike function: ${error.message}`);
     sendErrorMail(`Found Error: in checkPriceHike function ${error.message}` );
   }

@@ -181,6 +181,7 @@ export function timestampToDay(timestamp) {
  export const PRICE_HISTORY_FILE = path.join(__dirname, "/fs/priceHistory.json");
 
 export async function updatePriceHistory(coinsData) {
+  let i =1;
     try {
         console.log('updatePriceHistory');
         if (!coinsData || !Array.isArray(coinsData)) {
@@ -201,10 +202,12 @@ export async function updatePriceHistory(coinsData) {
         // Update coin prices with the new data
         coinsData.forEach((coin) => {
             const { market, last_price } = coin;
+            i++;
 
             if (market && last_price !== undefined) {
                 // Initialize an array for the coin if it doesn't exist
                 if (!currentPrices[market]) {
+                  console.log(`!currentPrices[market] = ${currentPrices[market]}`)
                     currentPrices[market] = [];
                 }
 
@@ -225,9 +228,11 @@ export async function updatePriceHistory(coinsData) {
         } catch (error) {
             console.error('Error storing Price History:', error);
         }
+        console.log("done with price history update")
     } catch (error) {
-        console.error('Error:', error);
-        sendLogs('Failed to updatePriceHistory. Error: ' + error.message);
+        console.error(`Failed to updatePriceHistory at i:${i} Error: ' + ${error} ${coinsData}`);
+        sendLogs(`current prices:\n ${currentPrices}`);
+        sendLogs(`Failed to updatePriceHistory at i:${i} of total length ${coinsData.length} Error: ' + ${error.message} ${coinsData}`);
 
     }
 }

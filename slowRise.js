@@ -14,8 +14,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export async function slowRiseBuyCheck(coinsArray,_id) {
-  try{
   let id = _id;
+  try{
   let flatCoinsArray=flatCoins;
   let priceHistory;
   if(flatCoinsArray.length > 0 && coinsArray.length > 0){
