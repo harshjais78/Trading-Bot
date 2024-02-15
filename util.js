@@ -210,6 +210,7 @@ export async function updatePriceHistory(coinsData) {
                 if (!currentPrices[market] || currentPrices[market] == undefined) {
                   console.log(`currentPrices[market] = ${currentPrices[market]} & market = ${market}`)
                     currentPrices[market] = [];
+                    console.log(`currentPrices[market] = ${currentPrices[market]} & market = ${market}`)
                 }
 
                 // Append the new price to the array
@@ -231,9 +232,9 @@ export async function updatePriceHistory(coinsData) {
         }
         console.log("done with price history update")
     } catch (error) {
-        console.error(`Failed to updatePriceHistory at i:${i} Error: ' + ${error} ${JSON.stringify(coinsData)}`);
-        sendLogs(`current prices:\n ${JSON.stringify(currentPrices)}`);
-        sendLogs(`Failed to updatePriceHistory at i:${i} of total length ${coinsData.length} Error: ' + ${error.message} ${JSON.stringify(coinsData)}`);
+        console.error(`Failed to updatePriceHistory at i:${i} of total length ${coinsData.length}  Error: ' + ${error} `);
+        // sendLogs(`current prices:\n ${JSON.stringify(currentPrices)}`);
+        sendLogs(`Failed to updatePriceHistory at i:${i} of total length ${coinsData.length} Error: ' + ${error.message} `);
 
     }
 }
