@@ -182,6 +182,7 @@ export function timestampToDay(timestamp) {
 
 export async function updatePriceHistory(coinsData) {
   let i =1;
+  let currentPrices = {};
     try {
         console.log('updatePriceHistory');
         if (!coinsData || !Array.isArray(coinsData)) {
@@ -190,7 +191,7 @@ export async function updatePriceHistory(coinsData) {
         }
 
         // Read current prices from the local file
-        let currentPrices = {};
+       
         try {
           const filePath = path.resolve(__dirname, PRICE_HISTORY_FILE);
           const fileData = await fs.promises.readFile(filePath, 'utf-8');
@@ -206,8 +207,8 @@ export async function updatePriceHistory(coinsData) {
 
             if (market && last_price !== undefined) {
                 // Initialize an array for the coin if it doesn't exist
-                if (!currentPrices[market]) {
-                  console.log(`!currentPrices[market] = ${currentPrices[market]}`)
+                if (!currentPrices[market] || currentPrices[market] == undefined) {
+                  console.log(`currentPrices[market] = ${currentPrices[market]}`)
                     currentPrices[market] = [];
                 }
 
