@@ -55,6 +55,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
     let price20minBack=0;
     let matched=true;
     let slowRiseCoins=[];
+    let i=1;
 
     currentTicker.forEach((currentCoin,idx) => {
       const symbol = currentCoin.market;
@@ -67,6 +68,9 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
 
       if(ticker20minAgo){
         let coin20minAgo = ticker20minAgo[idx];
+        if(ticker20minAgo[idx] == undefined){
+          sendLogs(`idx ${idx}: ticker20minAgo size = ${ticker20minAgo.size()} currentTicker size: ${currentTicker.size()}for symbol= ${symbol} `)
+        }
         if(coin20minAgo.market == symbol ){
         let prev20minPrice = parseFloat(coin20minAgo.last_price);
         let prev10minDeltaPerc = ((previousPrice - prev20minPrice)/prev20minPrice) *100; 
@@ -245,7 +249,7 @@ async function checkAndBuy(coinsWithHike,i,_id){
     catch(error){
       sendLogs(`${prefix(id)}  error in checkAndBuy: ${error.message}`);
       console.log(error);
-      sendErrorMail(`Found Error: in checkAndBuy function ${error.message}` );
+      sendErrorMail(`Found Error: in checkAndBuy function ${error}` );
 
     }
 

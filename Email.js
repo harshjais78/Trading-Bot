@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'; 
 
-let service_id = 'Coindcx alert'//uncomment this to use the service
+// let service_id = 'Coindcx alert'//uncomment this to use the service
 let template_id =  'template_rpcqp5h'
 let user_id = 'C1wF5QXy4IUHVBrql'
 let accessToken = 'O342h4LQQ7DlYj1EaBP8K'

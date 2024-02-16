@@ -34,7 +34,7 @@ export async function slowRiseBuyCheck(coinsArray,_id) {
         await sleep(1000); //avoiding race condition
       }
     }
-    for(coin in coinsArray){
+    for(const coin of coinsArray){
       let symbol=coin.symbol;
       if(flatCoinsArray.includes(symbol)){
         
@@ -54,7 +54,7 @@ export async function slowRiseBuyCheck(coinsArray,_id) {
     }
   }
 }catch(error){
-  sendLogs(`${prefix(id)} Error in slowRise, slowRiseBuyCheck: error: ${error.message}`);
+  sendLogs(`${prefix(id)} Error in slowRise, slowRiseBuyCheck: error: ${error}`);
 }
 }
 
