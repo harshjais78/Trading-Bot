@@ -343,7 +343,7 @@ async function greedySell(coinsWithHike, id){
             sendLogs(`${prefix(_id)} profitArr: ${profitArr.toString()}`);
             }
 
-            }
+            
 
             // decreased suddenly.
             if(profitArr.length >3 && (profitArr[3]- profitArr[1] < -3.7 || profitArr[5]- profitArr[0] < -3.7 )){ 
@@ -370,20 +370,18 @@ async function greedySell(coinsWithHike, id){
                 clearInterval(intervalId);
              }
 
-           
-         
             }
+         
+           
          else{
-          sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} cnt: ${cnt}, pending Percentage Earned: ${percentageEarned.toFixed(3)} cntLossRestore: ${cntLossRestore}`);
-          cntLossRestore++;
-          if(cntLossRestore > 4) // if price remained better than -8% atleast for 4*3 sec then restore cntLoss variable to 0 
-            cntLoss= 0;
+          sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} cnt: ${cnt}, pending Percentage Earned: ${percentageEarned.toFixed(3)} `);
             if(isMoreThan3 && percentageEarned <= 0){
               targetProfit = 3;
             }
             moreThan3cnt = 0;
         } 
         sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} with (>3% or <-8%) cnt: ${cnt} current price: ${currentPrice} Percentage Earned: ${percentageEarned.toFixed(3)} targetProfit: ${targetProfit} isNegWig: ${isNegWig}`);
+      }
 
     } catch (error) {
       console.error('An error occurred:', error);
