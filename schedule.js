@@ -15,7 +15,7 @@ const interval = setInterval(lossCheck, 30*60*1000); // Check every 30 minutes
 // setInterval(runScheduled, 4 * 60 * 60 * 1000);  // Check every 4 hours
 // setInterval(checkOrderOverTime,24*60*60*1000);  // check every 24 hours
 setInterval(keepServerAlive, 5*60*1000); //Make request in every 5 minutes
-setInterval(hikeScheduler,6*1000); //Make request in every 4 min
+setInterval(hikeScheduler,4*60*1000); //Make request in every 4 min
 setInterval(buildPair,24*60*60*1000); //Make request in every 4 min
 
 let ticker5minAgo;
@@ -23,7 +23,7 @@ let ticker10minAgo;
 let id=1;
 hikeScheduler();  // important to run
 // runOnce();
-// initializePriceHistoryFromFirebase();
+initializePriceHistoryFromFirebase();
 
 async function hikeScheduler() {
   try{
@@ -38,7 +38,7 @@ async function hikeScheduler() {
   if(id % 2 == 0){ 
    updateFlatCoinsList();
   }
-  await sleep(1000*3); // sleep for 1 minute
+  await sleep(1000*60); // sleep for 1 minute
 
   coinHiked(ticker5minAgo,ticker10minAgo,lag1min,id);
 
