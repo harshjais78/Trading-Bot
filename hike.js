@@ -341,6 +341,8 @@ async function greedySell(coinsWithHike, id){
                       `${prefix(_id)} Price droped from last Price: ${lastPrice} currentPrice: ${currentPrice} perc. Earned: ${percentageEarned.toFixed(3)}%`);
                     beGreedy(coinsWithHike, _id, -0.5);
                     clearInterval(intervalId);
+                  }else if(percentageEarned < 2.7){
+                    maxLossAccepted = 0;
                   }
                 } else {
                   isPriceInc = true;
@@ -352,7 +354,7 @@ async function greedySell(coinsWithHike, id){
               }
             }
 
-            if (moreThan3cnt >= 4 && !isMoreThan3 ) {
+            if (moreThan3cnt >= 3 && !isMoreThan3 ) {
               maxLossAccepted = -2;
               isMoreThan3 = true;
               sendLogs(`${prefix(_id)} more than 3 = true: ${percentageEarned.toFixed(3)}`);
