@@ -81,7 +81,7 @@
     formData.append('password', password);
 
     // Perform the POST request
-    fetch('https://coin-dcx.onrender.com/deletion', {
+    fetch('http://localhost:8080/deletion', {
       method: 'POST',
       body: formData
     })
@@ -89,7 +89,7 @@
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-      return response.json();
+      return "Your account will be deleted";
     })
     .then(data => {
       // Handle the response data
