@@ -21,11 +21,17 @@ app.get('/', (req, res) => {
 
     res.sendFile(path.join(__dirname,   'HansCure.html')); //
 });
-app.get('/deletion', (req, res) => {
-    
-    res.send('Your account will be deleted in 90 days'); //
-});
 
+app.post('/deletion', (req, res) => {
+    const username = req.body.username;
+    const password = req.body.password;
+
+    // Check if username and password are provided
+    if (!username || !password) {
+        return res.status(400).send('Username and password are required.');
+    }
+    res.status(200).send('Your account will be deleted in 90 days.');
+});
 
 app.get('/check', async (req, res) => {
     try {
