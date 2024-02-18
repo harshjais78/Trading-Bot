@@ -18,7 +18,12 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, 'public'))); 
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname,   'Home.html')); //
+
+    res.sendFile(path.join(__dirname,   'HansCure.html')); //
+});
+app.get('/deletion', (req, res) => {
+    
+    res.send('Your account will be deleted in 90 days'); //
 });
 
 
