@@ -55,7 +55,6 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
     let price20minBack=0;
     let matched=true;
     let slowRiseCoins=[];
-    let i=1;
 
     currentTicker.forEach((currentCoin,idx) => {
       const symbol = currentCoin.market;
@@ -70,6 +69,8 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
 
       if(!previousPrice || !prev20minPrice) {
         sendLogs(`${prefix(id)} for coin: ${symbol} returning cos their price is not defined`);
+        console.log(`${prefix(id)} for coin: ${symbol} returning ${previousPrice} and ${prev20minPrice }`);
+        return;
       }
 
         let prev10minDeltaPerc = ((previousPrice - prev20minPrice)/prev20minPrice) *100; 
@@ -287,13 +288,17 @@ async function greedySell(coinsWithHike, id){
             profitArr.push(percentageEarned);
             if (profitArr.length > 5) {
               profitArr = profitArr.slice(-6);
-              if (profitArr[2] - profitArr[0] >= 7) {
+              if (profitArr[5] - profitArr[3] || profitArr[5] - profitArr[0]>= 5) {
                 // increased suddenly
-                sendLogs(`${prefix(_id)} seems to be wick, so selling. Sum of last 3 percEarned: ${profitArr[2] - profitArr[0]}`);
+                sendLogs(`${prefix(_id)} seems to be wick, so selling. Sum of last 3 percEarned: ${profitArr[5] - profitArr[1]}`);
                 beGreedy(coinsWithHike, _id, -1);
                 clearInterval(intervalId);
               }
               sendLogs(`${prefix(_id)} profitArr: ${profitArr.toString()}`);
+            }else if(profitArr[profitArr.length - 1] - profitArr[0] > 3.5) {
+              sendLogs(`${prefix(_id)} seems to be wick, so selling. Sum of last 3 percEarned: ${profitArr[5] - profitArr[1]}`);
+              beGreedy(coinsWithHike, _id, -1);
+              clearInterval(intervalId);
             }
 
             // decreased suddenly.
@@ -319,7 +324,7 @@ async function greedySell(coinsWithHike, id){
                     negWigNumber++;
                   } else if (percentageEarned >= 2.7) {
                     sendLogs(
-                      `${prefix(_id)} Price droped from last Price: ${lastPrice} currentPrice: ${currentPrice} perc. Earned: ${percentageEarned.toFixed(3)}%`);
+                      `${prefix(_id)} Price droped from last Price: ${lastPrice} currentPrice: ${currentPrice} perc. Earned: ${(percentageEarned)}%`);
                     beGreedy(coinsWithHike, _id, -0.5);
                     clearInterval(intervalId);
                   }else if(percentageEarned < 2.7){
@@ -331,14 +336,14 @@ async function greedySell(coinsWithHike, id){
 
                 lastPrice = currentPrice;
                 lastcnt = cnt;
-                sendLogs(`${prefix(_id)} After 45 sec perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} `);
+                sendLogs(`${prefix(_id)} After 45 sec perc. Earned: ${percentageEarned}% last Price: ${lastPrice} `);
               }
             }
 
             if (moreThan3cnt >= 3 && !isMoreThan3 ) {
               maxLossAccepted = -2;
               isMoreThan3 = true;
-              sendLogs(`${prefix(_id)} more than 3 = true: ${percentageEarned.toFixed(3)}`);
+              sendLogs(`${prefix(_id)} more than 3 = true: ${percentageEarned}`);
             }
 
             if (
@@ -357,12 +362,12 @@ async function greedySell(coinsWithHike, id){
          
            
          else{
-          sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} cnt: ${cnt}, pending Percentage Earned: ${percentageEarned.toFixed(3)} `);
+          sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} cnt: ${cnt}, pending Percentage Earned: ${percentageEarned} `);
             if(isMoreThan3 && percentageEarned <= 0){
               targetProfit = 2.4;
             }
         } 
-        sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} with (>3% or <-8%) cnt: ${cnt} current price: ${currentPrice} Percentage Earned: ${percentageEarned.toFixed(3)} targetProfit: ${targetProfit} isNegWig: ${isNegWig}`);
+        sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} with (>3% or <-8%) cnt: ${cnt} current price: ${currentPrice} Percentage Earned: ${percentageEarned} targetProfit: ${targetProfit} isNegWig: ${isNegWig}`);
       }
 
     } catch (error) {
