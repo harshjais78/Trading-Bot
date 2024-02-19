@@ -69,7 +69,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
       if(ticker20minAgo){
         let coin20minAgo = ticker20minAgo[idx];
         if(ticker20minAgo[idx] == undefined){
-          sendLogs(`idx ${idx}: ticker20minAgo size = ${ticker20minAgo.size()} currentTicker size: ${currentTicker.size()}for symbol= ${symbol} `)
+          sendLogs(`${prefix(id)} idx ${idx}: ticker20minAgo size = ${ticker20minAgo.length} currentTicker size: ${currentTicker.length}for symbol= ${symbol} `)
         }
         if(coin20minAgo.market == symbol ){
         let prev20minPrice = parseFloat(coin20minAgo.last_price);
@@ -124,7 +124,9 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
          setTimeout(() => {
          sendLogs(`${prefix(id)}  running after Timeout for coin: ${symbol}, price was: ${currentPrice}`);
           id= id+'#';
-         checkPriceHike(previousData,ticker20minAgo,lag1min, false);
+          let previousData2 = [...previousData]
+          let ticker20minAgo2 = [...ticker20minAgo];
+         checkPriceHike(previousData2,ticker20minAgo2,lag1min, false);
        }, 1000 * 30);
         }
         else{
