@@ -59,21 +59,19 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
 
     currentTicker.forEach((currentCoin,idx) => {
       const symbol = currentCoin.market;
-      const previousCoin=previousData[idx];
-      // console.log(`previousData ${previousCoin}`);
-      const previousPrice = parseFloat(previousCoin.last_price);
+      if(!previousData || !ticker20minAgo) return;
+      if(idx >= previousData.length || idx >= ticker20minAgo.length){ 
+        sendLogs(`${prefix(id)} for coin: ${symbol} returning cos of length mismatch prev length:${previousData.length} before prev length:${ticker20minAgo.length} & idx: ${idx}`);
+        return;
+    }
+ 
+      const previousPrice = getPriceOf(symbol, previousData , idx);
+      const prev20minPrice = getPriceOf(symbol, ticker20minAgo, idx);
 
-      if(symbol !==previousCoin.market)
-      return;
+      if(!previousPrice || !prev20minPrice) {
+        sendLogs(`${prefix(id)} for coin: ${symbol} returning cos their price is not defined`);
+      }
 
-      if(ticker20minAgo){
-        let coin20minAgo = ticker20minAgo[idx];
-        if(ticker20minAgo[idx] == undefined || ticker20minAgo[idx].market == undefined){
-          sendLogs(`${prefix(id)} idx ${idx}: ticker20minAgo size = ${ticker20minAgo.length} currentTicker size: ${currentTicker.length}for symbol= ${symbol} `)
-          return;
-        }
-        if(coin20minAgo.market == symbol ){
-        let prev20minPrice = parseFloat(coin20minAgo.last_price);
         let prev10minDeltaPerc = ((previousPrice - prev20minPrice)/prev20minPrice) *100; 
         price20minBack = prev20minPrice;
         if(prev10minDeltaPerc >= 1.5) 
@@ -81,27 +79,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
           else
           prevChangePerc = 0;
 
-        }
-        else{
-          ticker20minAgo.forEach((coin20minAgo)=>{
-            if(coin20minAgo.market == symbol){
-            let prev20minPrice = parseFloat(coin20minAgo.last_price);
-            let prev10minDeltaPerc = ((previousPrice - prev20minPrice)/prev20minPrice) *100; 
-            price20minBack = prev20minPrice;
-            if(prev10minDeltaPerc >= 1.5 ) 
-              prevChangePerc = prev10minDeltaPerc;
-              else
-              prevChangePerc = 0;
-            return;
-          }
-
-          })
-          matched = false;
-      }
-        }
-      // console.log(symbol, previousCoin.market)
-
-      if (previousPrice) {
+ 
         const currentPrice = parseFloat(currentCoin.last_price);
         const priceChangePercent = ((currentPrice - previousPrice) / previousPrice) * 100;
          // current should be increasing
@@ -151,7 +129,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
               price20minBack
             });
           }
-      }
+
 
       price20minBack=0;
       prevChangePerc = 0;
@@ -402,7 +380,22 @@ async function greedySell(coinsWithHike, id){
 }
 }
 
+function getPriceOf(symbol, arr, probableIdx){
+  if(arr[probableIdx].market == symbol ){
+    if(!arr[probableIdx].last_price) return undefined;
+    return parseFloat(arr[probableIdx].last_price);
 
+    }
+    else{
+      arr.forEach((coinObj)=>{
+        if(coinObj.market == symbol){
+          if(!coinObj.last_price) return undefined;
+          return parseFloat(coinObj.last_price);
+      }
+});
+    }
+    return undefined;
+  }
 
 
 
