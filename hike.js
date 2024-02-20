@@ -343,6 +343,7 @@ async function greedySell(coinsWithHike, id){
             if (moreThan3cnt >= 3 && !isMoreThan3 ) {
               maxLossAccepted = -2;
               isMoreThan3 = true;
+              lastPrice = currentPrice; // initalize for the first time
               sendLogs(`${prefix(_id)} more than 3 = true: ${percentageEarned}`);
             }
 
@@ -392,13 +393,13 @@ function getPriceOf(symbol, arr, probableIdx){
 
     }
     else{
-      arr.forEach((coinObj)=>{
-        if(coinObj.market == symbol){
-          if(!coinObj.last_price) return undefined;
-          return parseFloat(coinObj.last_price);
-      }
-});
+      for (const coinObj of arr) {
+        if (coinObj.market == symbol) {
+            if (!coinObj.last_price) return undefined;
+            return parseFloat(coinObj.last_price);
+        }
     }
+}
     return undefined;
   }
 
