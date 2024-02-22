@@ -288,15 +288,15 @@ async function greedySell(coinsWithHike, id){
             profitArr.push(percentageEarned);
             if (profitArr.length > 5) {
               profitArr = profitArr.slice(-6);
-              if (profitArr[5] - profitArr[3] || profitArr[5] - profitArr[0]>= 5) {
+              if (profitArr[5] - profitArr[3]  >= 5 || profitArr[5] - profitArr[0]>= 5) {
                 // increased suddenly
-                sendLogs(`${prefix(_id)} seems to be wick, so selling. Sum of last 3 percEarned: ${profitArr[5] - profitArr[1]}`);
+                sendLogs(`${prefix(_id)} seems to be +ve wick, so selling.`);
+                sendLogs(`${prefix(_id)} profitArr: ${profitArr.toString()}`);
                 beGreedy(coinsWithHike, _id, -1);
                 clearInterval(intervalId);
               }
-              sendLogs(`${prefix(_id)} profitArr: ${profitArr.toString()}`);
             }else if(profitArr[profitArr.length - 1] - profitArr[0] > 3.5) {
-              sendLogs(`${prefix(_id)} seems to be wick, so selling. Sum of last 3 percEarned: ${profitArr[5] - profitArr[1]}`);
+              sendLogs(`${prefix(_id)} seems to be a +ve wick, so selling. profitArr: ${profitArr.toString()}`);
               beGreedy(coinsWithHike, _id, -1);
               clearInterval(intervalId);
             }
@@ -322,7 +322,10 @@ async function greedySell(coinsWithHike, id){
                   if ( isNegWig && negWigNumber == 0) { // allowed only once to skip selling cos of neg Wig.
                     sendLogs(`${prefix(_id)} seems to be -ve wick, so skipping sell.`);
                     negWigNumber++;
-                  } else if (percentageEarned >= 2.7) {
+                  } else if( negWigTime >= cnt - 18){
+                    sendLogs(`${prefix(_id)} skipping sell. last price ${lastPrice} was on cliff, currentPrice: ${currentPrice}`);
+                  }
+                  else if (percentageEarned >= 2.7) {
                     sendLogs(
                       `${prefix(_id)} Price droped from last Price: ${lastPrice} currentPrice: ${currentPrice} perc. Earned: ${(percentageEarned)}%`);
                     beGreedy(coinsWithHike, _id, -0.5);
@@ -436,6 +439,11 @@ async function isStillIncr( coinsWithHike, id ){
    if( ((0.07 * priceHistory[0]) + priceHistory[0] ) >= coinsWithHike.currentPrice) {  // max till now should be lesser 7%
     let check = priceHistory.slice(0,10).toString();
     sendLogs( `${prefix(id)} recommended return coin: ${coinsWithHike.symbol}, might have incerased already max price: ${priceHistory[0]}, history: ${check}` );
+  }
+
+  if( ((coinsWithHike.price20minBack - priceHistory[priceHistory.length - 8])/priceHistory[priceHistory.length - 8]) > 23 ) {
+    sendLogs( `${prefix(id)} recommended return coin: ${coinsWithHike.symbol}, cos 9th lowest price was ${priceHistory[priceHistory.length - 8]} lesser than 23%` );
+    shouldReturn =true;
   }
 
   if( ( (coinsWithHike.price20minBack - price30minBack) * 100 / price30minBack ) > 15){
