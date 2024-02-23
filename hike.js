@@ -120,7 +120,7 @@ async function checkPriceHike(previousData,ticker20minAgo,lag1min, canCheckBranc
           });
         }
 
-          if(priceChangePercent >= 4.6 && priceChangePercent <= recheckThreshold +1){
+          if(( priceChangePercent + prevChangePerc >=4.6 || priceChangePercent >= 4.6 ) && priceChangePercent <= recheckThreshold +1){
             slowRiseCoins.push({
               symbol,
               curr10minDeltaPerc: priceChangePercent.toFixed(3),

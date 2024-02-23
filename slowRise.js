@@ -40,9 +40,9 @@ export async function slowRiseBuyCheck(coinsArray,_id) {
         
       if( !is0volume(coin)){
        let priceBefore = priceHistory[symbol]; 
-       if(priceBefore){
-        let priceAtSomePoint = priceBefore[priceBefore - 17];
-        if(coin.currentPrice > priceAtSomePoint + (0.14 * priceAtSomePoint)){ // if price have increased more than 14 perc. from some point in past.
+       if(priceBefore.length > 20){
+        let priceAtSomePoint = priceBefore[priceBefore.length - 17];
+        if( ((coin.currentPrice - priceAtSomePoint) / priceAtSomePoint) > 13){ // if price have increased more than 13 perc. from some point in past.
           sendLogs(`${prefix(id)}  +++++ virtual Coin: ${coinsWithHike[i].symbol} bought at ${coinsWithHike[i].currentPrice} with slowRiseAlgo. Preparing to sell`)
           targetSell(coin,id,4);
         }else {sendLogs(`${prefix(id)} ${symbol} priceAtSomePoint: ${priceAtSomePoint} is more than 15%`);}
@@ -94,7 +94,7 @@ async function targetSell(coinsWithHike, id, targetProfit){
 
           const percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
       
-            if((percentageEarned >= targetProfit || percentageEarned < maxLossAccepted) ){  // Extreme case.
+            if(percentageEarned >= targetProfit || percentageEarned < maxLossAccepted || cnt > 8400 ){  // Extreme case.
 
                sendLogs(`${prefix(id)} inside targetSell: targetProfit: ${targetProfit} percentageEarned: ${percentageEarned}`); 
                sell(id,symbol,boughtPrice,currentPrice,"",percentageEarned,'','',cnt);
