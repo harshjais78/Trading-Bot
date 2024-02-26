@@ -302,12 +302,13 @@ async function greedySell(coinsWithHike, id){
             }
 
             // decreased suddenly.
-            if (profitArr.length > 3 &&(profitArr[3] - profitArr[1] < -3.4 
+            if (profitArr.length > 3 && (profitArr[5] - profitArr[3] < -3.4 
                 || profitArr[5] - profitArr[0] < -3.4) && !isNegWig) {
               isNegWig = true;
               negWigTime = cnt;
               sendLogs(`${prefix(_id)} seems to be -ve wick, so skipping. Sum of last 3 percEarned: ${profitArr[2] - profitArr[0]}`);
             }
+            sendLogs(`${prefix(_id)} profitArr: ${profitArr.toString()}`);
 
             // Reset -ve wig after 4*3 sec.
             if (negWigTime + 4 < cnt) isNegWig = false;
