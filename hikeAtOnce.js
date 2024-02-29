@@ -241,7 +241,7 @@ export async function spikeGreedySell(coinsWithHike, id){
   let is1minInc = false;
 
 
-  // Fetch ticker data every 3 seconds
+  // Fetch ticker data every 1 min
   const intervalId = setInterval(async () => {
     try {
       const tickerData = await getTicker(symbol);
@@ -276,82 +276,7 @@ export async function spikeGreedySell(coinsWithHike, id){
         }
           sendLogs(`${prefix(_id)} inside spikeGreedySell: price: ${currentPrice}  percentageEarned: ${percentageEarned}`); 
 
-        //   if ( percentageEarned >= 3 || percentageEarned < maxLossAccepted ){  // if price is bw -8 to 3 then do nothing, hope coin to inc more than 3%
 
-        //     if(percentageEarned >= 7)
-        //     moreThan3cnt++;
-
-        //     if(percentageEarned >= 12)
-        //      moreThan12cnt++;
-
-        //      if(moreThan12cnt >= 3)
-        //        maxLossAccepted = 3;
-
-        //     if(isMoreThan3){
-        //       if(lastcnt + 2 <= cnt ){ // after 2 min
-        //         if(currentPrice < lastPrice){
-        //           maxLossAccepted = -5;
-        //         } 
-        //         if(currentPrice < lastPrice){
-        //             if(profitArr.length > 3 && (profitArr[3]- profitArr[1] < -15 ||  profitArr[3]- profitArr[0] < -15 )){ // decreased suddenly.
-        //                 sendLogs(`${prefix(_id)} seems to be -ve wick,so skipping selling part. Sum of last 3 percEarned: ${profitArr[0]} ${profitArr[1]}  ${profitArr[2]}  ${profitArr[3]}`);
-        //             }else{
-        //         sendLogs(`${prefix(_id)} Being Greedy: perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} currentPrice: ${currentPrice}`);
-        //         // beGreedy(coinsWithHike,_id,-0.5);
-        //           clearInterval(intervalId);
-        //         }
-        //     }else{
-        //         is1minInc = true;
-        //     }
-        //         lastPrice = currentPrice;
-        //         lastcnt = cnt;
-        //         sendLogs(`${prefix(_id)} After 2 min perc. Earned: ${percentageEarned.toFixed(3)}% last Price: ${lastPrice} `);
-        //       }
-
-        //       profitArr.push(percentageEarned);
-        //       if(profitArr.length >3){
-        //       profitArr=profitArr.slice(-4);
-        //       sendLogs(`${prefix(_id)} profitArr: ${profitArr.toString()}`);
-        //       if( profitArr[2] -profitArr[0] >= 15 || profitArr[3] - profitArr[0] >= 15){   // increased suddenly
-        //         sendLogs(`${prefix(_id)} seems to be wick, so selling. Sum of last 3 percEarned: ${profitArr[2] - profitArr[0]}`);
-        //         beGreedy(coinsWithHike,_id,-1);
-        //     }else if(profitArr.length > 3 && (profitArr[3]- profitArr[1] < -15 ||  profitArr[3]- profitArr[0] < -15 )){ // decreased suddenly.
-        //         sendLogs(`${prefix(_id)} seems to be -ve wick,so skipping selling part. Sum of last 3 percEarned: ${profitArr[0]} ${profitArr[1]}  ${profitArr[2]}  ${profitArr[3]}`);
-        //         return;
-        //     }
-        //     }
-        //     if(is1minInc){
-        //         sendLogs(`${prefix(_id)} 1min candle is still increasing, so skip selling. Earned ${percentageEarned}`);
-        //         return; // increase as far as possible.
-        //     }
-        //     }
-
-        //     if(moreThan3cnt >= 4){
-        //       isMoreThan3 = true;
-        //       lastPrice = currentPrice;
-        //       sendLogs(`${prefix(_id)} more than 3 = true: ${percentageEarned.toFixed(3)}`);
-        //     }
-
-        //     if(percentageEarned >= targetProfit || percentageEarned < maxLossAccepted){
-          
-        //       if( percentageEarned < maxLossAccepted){
-        //         // sell if waited for appr. 2hrs bw -8 to -11 or it is more than 30 min or too much of loss
-        //       sell(intervalId,_id,symbol,boughtPrice,currentPrice," ",percentageEarned,cntLoss,cntLossRestore,cnt)
-        //     }else{
-        //       sendLogs(`${prefix(_id)} inside greedy sell: targetProfit: ${targetProfit} percentageEarned: ${percentageEarned}`); 
-        //         beGreedy(coinsWithHike,_id,0);
-        //       clearInterval(intervalId);
-        //      }
-
-        //     }
-         
-        //     sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} with (>3% or <-8%) cnt: ${cnt} current price: ${currentPrice} Percentage Earned: ${percentageEarned.toFixed(3)} targetProfit: ${targetProfit}`);
-        //   }
-        //  else{
-        //   sendLogs(`${prefix(_id)} trying to sell coin: ${symbol} cnt: ${cnt}, pending Percentage Earned: ${percentageEarned.toFixed(3)} cntLossRestore: ${cntLossRestore}`);
-        //     moreThan3cnt = 0;
-        // } 
-        
       }
     } catch (error) {
       console.error('An error occurred:', error);
@@ -359,83 +284,13 @@ export async function spikeGreedySell(coinsWithHike, id){
       sendErrorMail(`Found Error: in greedySell function inside scheduler in hikeAtOnce ${error.message}` );
 
     }
-  }, 60*1000); // 3 seconds in milliseconds
+  }, 60*1000); // 
 }catch (error) {
   console.log('An error occurred:', error);
   sendLogs(`${prefix(id)} error in greedySell function: ${error.message}`);
   sendErrorMail(`Found Error: in greedySell function in hikeAtOnce ${error.message}` );
 
 }
-}
-
-
-
-
-
-async function beGreedy(coinsWithHike, id, maxGreedy){
-  try {
-    const boughtPrice=coinsWithHike.currentPrice;
-    const symbol=coinsWithHike.symbol;
-    sendLogs(`${prefix(id)}  inside beGreedy`);
-  
-    // var maxPrice =-1;
-    // console.log(maxPrice);
-    // let cnt = 0;
-    
-    // if (maxGreedy == undefined)
-    //   maxGreedy = -2;
-     
-    // // Fetch ticker data every 3 seconds
-    // const intervalId = setInterval(async () => {
-    //   try {
-        const tickerData = await getTicker();
-        let currentPrice;
-    //     cnt++;
-
-        if (!tickerData) {
-          console.error(`Ticker data not available for ${symbol}`);
-          return;
-        }
-
-    //     // run at every 3 seconds
-        tickerData.forEach((currentTicker)=> {
-          if(currentTicker.market == symbol){
-           currentPrice = parseFloat(currentTicker.last_price);
-          // if(maxPrice == -1)
-          //  maxPrice = currentPrice;
-          return; // leaves only current iteration
-        }
-        });
-  
-    //     console.log(currentPrice,maxPrice);
-    //     if (currentPrice != undefined) {
-  
-    //       if (currentPrice >= maxPrice) {
-    //         maxPrice = currentPrice;
-    //         console.log(`New max price for ${symbol}: ${maxPrice}`);
-    //         sendLogs(`${prefix(id)} updated maxPrice: ${maxPrice}` );          
-
-    //       }
-    //       else{
-          // const priceChangePercent = ((currentPrice - maxPrice ) / maxPrice) * 100;
-  
-    //       if (priceChangePercent <= maxGreedy) {
-            const percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
-            sell('',id,symbol,boughtPrice,currentPrice,'',percentageEarned,'','','')  
-        //   }
-        //   sendLogs(`${prefix(id)} inside beGreedy current price: ${currentPrice} priceChange%: ${priceChangePercent} maxPrice: ${maxPrice}` );          
-        //   }
-          
-        // }
-    //   } catch (error) {
-    //     console.error('An error occurred:', error);
-    //   }
-    // }, 3000); // 3 seconds in milliseconds
-  }catch (error) {
-    console.log('An error occurred:', error);
-    sendErrorMail(`Found Error: in beGreedy function in hikeAtOnce ${error.message}` );
-
-  }
 }
 
 

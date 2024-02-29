@@ -218,8 +218,10 @@ async function checkAndBuy(coinsWithHike,i,_id){
    sendLogs(`${prefix(id)}  +++++ virtual Coin: ${coinsWithHike[i].symbol} bought at ${coinsWithHike[i].currentPrice}. Preparing to sell`)
    console.log(`virtual Coin: ${coinsWithHike[i].symbol} bought at ${coinsWithHike[i].currentPrice} preparing to sell`);
    //buy at current market
-   if(coinsWithHike[i].priceChangePercent >20 || coinsWithHike[i].combineChangePercent > 30)
+   if(coinsWithHike[i].priceChangePercent >20 || coinsWithHike[i].combineChangePercent > 27)
      spikeGreedySell(coinsWithHike[i], id);
+    else if(coinsWithHike[i].priceChangePercent >18 || coinsWithHike[i].combineChangePercent > 23)
+     sendLogs(`${prefix(id)} taking entry is dangerous.`)
    else
     greedySell(coinsWithHike[i], id);
 
@@ -251,7 +253,7 @@ async function greedySell(coinsWithHike, id){
   let lastPrice = 100;
   let profitArr=[]
   let isNegWig = false;
-  let negWigTime =0;
+  let negWigTime =-100;
   let isPriceInc = false;
   let negWigNumber = 0;
 
@@ -351,10 +353,10 @@ async function greedySell(coinsWithHike, id){
               sendLogs(`${prefix(_id)} more than 3 = true: ${percentageEarned}`);
             }
 
+            // If targetProfit < 3 then no one can stop me to sell whether more than targetProfit or less than maxLossAccepted
             if (
-              (percentageEarned >= targetProfit ||
-                percentageEarned < maxLossAccepted) &&
-              !isNegWig && !isPriceInc
+              (percentageEarned >= targetProfit || percentageEarned < maxLossAccepted) &&
+             ( !isNegWig && !isPriceInc || targetProfit < 3) 
             ) {
               // Extreme case.
 
@@ -440,14 +442,15 @@ async function isStillIncr( coinsWithHike, id ){
    if( ((0.07 * priceHistory[0]) + priceHistory[0] ) >= coinsWithHike.currentPrice) {  // max till now should be lesser 7%
     let check = priceHistory.slice(0,10).toString();
     sendLogs( `${prefix(id)} recommended return coin: ${coinsWithHike.symbol}, might have incerased already max price: ${priceHistory[0]}, history: ${check}` );
+    shouldReturn = true;
   }
 
-  if( ((coinsWithHike.price20minBack - priceHistory[priceHistory.length - 8])/priceHistory[priceHistory.length - 8]) > 23 ) {
+  if( ((coinsWithHike.price20minBack - priceHistory[priceHistory.length - 8])/priceHistory[priceHistory.length - 8]) > 23 ) { // gradually already increased by more than 23%
     sendLogs( `${prefix(id)} recommended return coin: ${coinsWithHike.symbol}, cos 9th lowest price was ${priceHistory[priceHistory.length - 8]} lesser than 23%` );
     shouldReturn =true;
   }
 
-  if( ( (coinsWithHike.price20minBack - price30minBack) * 100 / price30minBack ) > 15){
+  if( ( (coinsWithHike.price20minBack - price30minBack) * 100 / price30minBack ) > 15){ // ensure sudden hike is first time after tiny candles 
     sendLogs( `${prefix(id)} recommended return for coin: ${coinsWithHike.symbol}, You have missed right time to buy. Recently incr. ${((coinsWithHike.price20minBack - price30minBack )* 100 / price30minBack).toFixed(3)  }%` );
    shouldReturn =true;
   }
