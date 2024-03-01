@@ -51,12 +51,12 @@ async function sendData(data){
     const elapsed = now - lastCallTimestamp;
     
     // Reset call count 
-    if (elapsed > 60000) {
+    if (elapsed > 1000*60*60) { // 1 hr
         lastCallTimestamp = now;
         callCount = 0;
     }
     
-    if (callCount <= 5) {
+    if (callCount <= 6) {
         lastCallTimestamp = now;
         callCount++;
        

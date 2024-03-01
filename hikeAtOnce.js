@@ -327,7 +327,7 @@ async function sellAtCurrentPrice(coinsWithHike, id, maxGreedy){
 
 function sell(id,symbol,boughtPrice,currentPrice,percentageEarned){
   sendLogs(`${prefix(id)} GreedySpike, For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice}   Percentage Earned/loss: ${percentageEarned.toFixed(2)}% `);
-  console.log(`For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice} Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
+  console.log(`For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
   sendLogs(`${prefix(id)} ----------------------------------------------------------`);
   sendEmail(`From GreedySpike, for coin: ${symbol}, \nBought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% `)
 
