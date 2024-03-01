@@ -271,7 +271,7 @@ export async function spikeGreedySell(coinsWithHike, id){
         }
 
         if(percentageEarned >= 3.6 || percentageEarned <maxLossAccepted){
-          beGreedy(coinsWithHike,_id,0);
+          sellAtCurrentPrice(coinsWithHike,_id,0);
           clearInterval(intervalId);
         }
           sendLogs(`${prefix(_id)} inside spikeGreedySell: price: ${currentPrice}  percentageEarned: ${percentageEarned}`); 
@@ -294,12 +294,42 @@ export async function spikeGreedySell(coinsWithHike, id){
 }
 
 
-function sell(intervalId,id,symbol,boughtPrice,currentPrice,maxPrice,percentageEarned,cntLoss,cntLossRestore,cnt){
-  sendLogs(`${prefix(id)} GreedySpike, For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% cntLoss: ${cntLoss} cntLossRestore: ${cntLossRestore} cnt: ${cnt}`);
+async function sellAtCurrentPrice(coinsWithHike, id, maxGreedy){
+  try {
+    const boughtPrice=coinsWithHike.currentPrice;
+    const symbol=coinsWithHike.symbol;
+    sendLogs(`${prefix(id)}  inside beGreedy`);
+        const tickerData = await getTicker();
+        let currentPrice;
+
+        if (!tickerData) {
+          console.error(`Ticker data not available for ${symbol}`);
+          return;
+        }
+
+        tickerData.forEach((currentTicker)=> {
+          if(currentTicker.market == symbol){
+           currentPrice = parseFloat(currentTicker.last_price);
+          return; // leaves only current iteration
+        }
+        });
+
+            const percentageEarned = ((currentPrice - boughtPrice) / boughtPrice) * 100;
+            sell(id,symbol,boughtPrice,currentPrice,percentageEarned)  
+   
+  }catch (error) {
+    console.log('An error occurred:', error);
+    sendErrorMail(`Found Error: in beGreedy function in hikeAtOnce ${error.message}` );
+
+  }
+}
+
+
+function sell(id,symbol,boughtPrice,currentPrice,percentageEarned){
+  sendLogs(`${prefix(id)} GreedySpike, For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice}   Percentage Earned/loss: ${percentageEarned.toFixed(2)}% `);
   console.log(`For coin: ${symbol} Bought Price: ${boughtPrice}  Selling Price: ${currentPrice} max price: ${maxPrice} Percentage Earned/loss: ${percentageEarned.toFixed(2)}%`);
   sendLogs(`${prefix(id)} ----------------------------------------------------------`);
   sendEmail(`From GreedySpike, for coin: ${symbol}, \nBought Price: ${boughtPrice}  Selling Price: ${currentPrice}  Percentage Earned/loss: ${percentageEarned.toFixed(2)}% `)
- //clear the interval
- clearInterval(intervalId);
+
 }
 
