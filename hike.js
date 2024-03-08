@@ -247,7 +247,7 @@ async function greedySell(coinsWithHike, id){
   let _id=id;
   let isMoreThan3 =false;
   let moreThan3cnt = 0;
-  let maxLossAccepted = -10;
+  let maxLossAccepted = -3;
   let targetProfit = 7;
   let lastcnt = 0;
   let lastPrice = 100;

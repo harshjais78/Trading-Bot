@@ -261,6 +261,8 @@ export async function getPriceHistory(market) {
 export let flatCoins = [];
 export async function updateFlatCoinsList() {
   let priceHistoryList;
+  let newArray = [];
+  
   while (!priceHistoryList) {
     try {
       // Read price history from the local file
@@ -298,12 +300,10 @@ export async function updateFlatCoinsList() {
        if( priceHistory.length > 49 && ((0.12 * priceHistory[50]) + priceHistory[50] ) < priceHistory[0]) {  // max till now should be lesser 15%
         continue;
       }
-    
-      flatCoins.push(symbol)
+        newArray.push(symbol)
     }
     } catch (error) {sendLogs( ` Catch error in updateFlatCoinsList: ${error}` );}    
     }
 
- 
-
+    flatCoins = newArray
 }
