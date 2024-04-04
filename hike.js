@@ -218,8 +218,9 @@ async function checkAndBuy(coinsWithHike,i,_id){
    sendLogs(`${prefix(id)}  +++++ virtual Coin: ${coinsWithHike[i].symbol} bought at ${coinsWithHike[i].currentPrice}. Preparing to sell`)
    console.log(`virtual Coin: ${coinsWithHike[i].symbol} bought at ${coinsWithHike[i].currentPrice} preparing to sell`);
    //buy at current market
-   if(coinsWithHike[i].priceChangePercent >20 || coinsWithHike[i].combineChangePercent > 27)
-     spikeGreedySell(coinsWithHike[i], id);
+   if(coinsWithHike[i].priceChangePercent >20 || coinsWithHike[i].combineChangePercent > 27){
+    //  spikeGreedySell(coinsWithHike[i], id);
+  }
     else if(coinsWithHike[i].priceChangePercent >18 || coinsWithHike[i].combineChangePercent > 23)
      sendLogs(`${prefix(id)} taking entry is dangerous.`)
    else

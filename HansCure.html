@@ -76,25 +76,36 @@
     event.preventDefault();
     var username = document.getElementById("username").value;
     var password = document.getElementById("password").value;
+    var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if(!emailPattern.test(username)){
+     alert("Please enter a valid username");
+     return
+    }
+
+     if(password.length < 8){
+      alert("Invalid password")
+      return
+    }
     var formData = new FormData();
     formData.append('username', username);
     formData.append('password', password);
 
     // Perform the POST request
-    fetch('http://localhost:8080/deletion', {
+    fetch('https://coin-dcx.onrender.com/deletion', {
       method: 'POST',
       body: formData
     })
     .then(response => {
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        alert("Something went wrong")
       }
-      return "Your account will be deleted";
+      alert( "Your account will be deleted in 60 days" );
     })
     .then(data => {
       // Handle the response data
       console.log(data);
-      document.getElementById("message").innerHTML = "Your account will be deleted in 90 days!";
+      document.getElementById("message").innerHTML = "Your account will be deleted in 60 days!";
     })
     .catch(error => {
       // Handle errors
