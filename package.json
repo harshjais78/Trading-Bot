@@ -13,6 +13,7 @@
     "@emailjs/browser": "^3.11.0",
     "axios": "^1.4.0",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
     "emailjs": "^4.0.2",
     "express": "^4.18.2",
     "firebase": "^10.7.1",
