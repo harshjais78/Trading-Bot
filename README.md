@@ -11,7 +11,7 @@ A web application which do automatic trading based on market performance using *
 
 ## Technologies used:  
 ***Firebase:*** To store tansaction history and other algo. data.  
-***EmailJS:*** To notify user about transaction using Email.  
+***EmailJS:*** To notify user through Email about trade executed.  
 ***Java:*** Used to create android app to get logs and imporve algorithm further.  
 ***WebSocket:*** To get update if balance or order is changed through CoinDCX app  
 
