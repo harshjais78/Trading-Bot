@@ -19,6 +19,7 @@ const MAX_COIN_HISTORY = 140;
 export function sendLogs(logMsg) {
     const currentDate = new Date();
     const dateKey = formatDateKey(currentDate);
+    console.log(`logMsg ${logMsg}`)
   
     const db = getDatabase();
     const logsRef = ref(db, `logs/${dateKey}`);

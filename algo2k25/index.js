@@ -1,6 +1,8 @@
 import axios from "axios";
 import { baseurl, publicbaseurl, ticker, market_details } from "../Constant.js";
 import { sendEmail } from "../Email.js";
+import { sendLogs } from "../firebase.js";
+import { prefix } from "../hike.js";
 
 // Cache memory
 let cachedPrices = {};                 // { "B-BTC_USDT": 24000 }
@@ -18,7 +20,7 @@ const COOLDOWN_MS = 4 * 60 * 60 * 1000; // 4 hours
 async function fetchAllPrices() {
     const url = `${publicbaseurl}${ticker}`;
     const { data } = await axios.get(url);
-    console.log(`Fetched ${data.length} markets`);
+    sendLogs(`${prefix("12")} Fetched ${data.length} markets`);
     return data; // array of { market, last_price, volume }
 }
 
@@ -69,7 +71,7 @@ export async function monitorPrices() {
                     }
 
                     if (!valid) {
-                        console.log(`⚠️ Ignoring ${market}, zero volume detected in last 6h`);
+                        sendLogs(`${prefix(market)} ⚠️ Ignoring ${market}, zero volume detected in last 6h`);
                         continue;
                     }
                 } else {
@@ -80,7 +82,7 @@ export async function monitorPrices() {
                         basePrice: last_price,
                         attempts: 0
                     };
-                console.log(`🚀 ${market} jumped ${hikePercent.toFixed(2)}%. Added to phaseOneCandidates`);
+                sendLogs(`${prefix(market)} 🚀 ${market} jumped ${hikePercent.toFixed(2)}%. Added to phaseOneCandidates`);
             }
 
             // Step 2: check for ≥5% hike from first list price (within 3 runs)
@@ -97,12 +99,12 @@ export async function monitorPrices() {
                         lowestPrice: last_price,
                         startTime: Date.now()
                     };
-                    console.log(`⚡ ALERT: ${market} moved to PhaseTwo`);
+                    sendLogs(`${prefix(market)} ⚡ ALERT: ${market} moved to PhaseTwo`);
                     delete phaseOneCandidates[market]; // cleanup
                 } else if (candidate.attempts >= 3) {
                     // If 3 chances are done and no 5% hike → drop it
                     delete phaseOneCandidates[market];
-                    console.log(`ℹ️ Dropped ${market} from PhaseOne after 3 attempts without 5% hike`);
+                    sendLogs(`${prefix(market)} ℹ️ Dropped ${market} from PhaseOne after 3 attempts without 5% hike`);
                 }
             }
 
@@ -129,7 +131,7 @@ export async function monitorPrices() {
                             if (totalDrop >= 5) {
                                 reboundWatchlist[market] = { market, startTime: Date.now() };
                                 delete phaseTwoAlerts[market];
-                                console.log(`📉 ${market} moved to reboundWatchlist after 2 consecutive red candles`);
+                                sendLogs(`${prefix(market)} 📉 ${market} moved to reboundWatchlist after 2 consecutive red candles`);
                                 break;
                             } else {
                                 if (Date.now() - entry.startTime > 1000 * 60 * 60 * 10) { // 10 hours
@@ -177,7 +179,7 @@ async function checkReboundCandidates() {
             // check for rebound
             const reboundPercent = ((last_price - alert.lowestPrice) / alert.lowestPrice) * 100;
             if (reboundPercent >= 1) {
-                console.log(`📈 Rebound detected for ${market}, buying at ${last_price}`);
+                sendLogs(`${prefix(market)} 📈 Rebound detected for ${market}, buying at ${last_price}`);
                 buyCoin(market, last_price);
                 delete reboundWatchlist[market];
                 continue;
@@ -185,7 +187,7 @@ async function checkReboundCandidates() {
 
             // check timeout (2 hours = 7200000 ms)
             if (now - alert.startTime >= 2 * 60 * 60 * 1000) {
-                console.log(`⌛ No rebound for ${market} in 2hrs, removing from watchlist`);
+                sendLogs(`${prefix(market)} ⌛ No rebound for ${market} in 2hrs, removing from watchlist`);
                 delete reboundWatchlist[market];
             }
         }
@@ -234,14 +236,14 @@ export async function manageBoughtCoins() {
 // ---- MOCK BUY/SELL ----
 function buyCoin(market, price) {
     sendEmail(`🟢 BUY ${market} at ${price}`)
-    console.log(`🟢 BUY ${market} at ${price}`);
+    sendLogs(`${prefix(market)} 🟢 BUY ${market} at ${price}`);
     boughtCoins[market] = { buyPrice: price, priceHistory: [price] };
     cooldowns[market] = Date.now(); // set cooldown
 }
 
 function sellCoin(market, price, reason) {
     sendEmail(`🔴 SELL ${market} at ${price} (Reason: ${reason})`)
-    console.log(`🔴 SELL ${market} at ${price} (Reason: ${reason})`);
+    sendLogs(`${prefix(market)} 🔴 SELL ${market} at ${price} (Reason: ${reason})`);
     delete boughtCoins[market];
     cooldowns[market] = Date.now(); // set cooldown
 }
