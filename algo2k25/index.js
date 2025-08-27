@@ -71,7 +71,6 @@ export async function monitorPrices() {
                     }
 
                     if (!valid) {
-                        sendLogs(`${prefix(market)} ⚠️ Ignoring ${market}, zero volume detected in last 6h`);
                         continue;
                     }
                 } else {
