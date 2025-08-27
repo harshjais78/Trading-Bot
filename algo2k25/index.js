@@ -160,7 +160,7 @@ export async function monitorPrices() {
     }
 }
 
-async function checkReboundCandidates() {
+export async function checkReboundCandidates() {
     try {
         const { data: latestData } = await axios.get(`${publicbaseurl}${ticker}`);
 

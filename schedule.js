@@ -7,7 +7,7 @@ import { sendEmail, sendErrorMail } from "./Email.js";
 import {getCoinReadyToBuy} from "./short-term.js";
 import { suddenFallAlgo } from "./suddenfall.js";
 import { coinHiked, getTime } from "./hike.js";
-import { monitorPrices, manageBoughtCoins } from "./algo2k25/index.js";
+import { monitorPrices, manageBoughtCoins, checkReboundCandidates } from "./algo2k25/index.js";
 import fetch from 'node-fetch'; 
 import { sendLogs,runOnce,updatePriceHistoryInFirebase,initializePriceHistoryFromFirebase } from "./firebase.js";
 
@@ -18,8 +18,9 @@ let canRunShortTerm = true;
 // setInterval(keepServerAlive, 5*60*1000); //Make request in every 5 minutes
 // setInterval(hikeScheduler,4*60*1000); //Make request in every 4 min
 // setInterval(buildPair,24*60*60*1000); //Make request in every 4 min
-setInterval(monitorPrices,2*60*60*1000); //Make request in every 2 hrs
-setInterval(manageBoughtCoins, 60*1000);
+
+setInterval(monitorPrices,1*60*60*1000); //Make request in every 2 hrs
+setInterval(manageBoughtCoins, 60*1000); // 1 min
 setInterval(checkReboundCandidates, 15*60*1000);// 15 min
 
 // let ticker5minAgo;
