@@ -15,11 +15,11 @@ let canRunShortTerm = true;
 // const interval = setInterval(lossCheck, 30*60*1000); // Check every 30 minutes
 // setInterval(runScheduled, 4 * 60 * 60 * 1000);  // Check every 4 hours
 // setInterval(checkOrderOverTime,24*60*60*1000);  // check every 24 hours
-// setInterval(keepServerAlive, 5*60*1000); //Make request in every 5 minutes
+setInterval(keepServerAlive, 5*60*1000); //Make request in every 5 minutes
 // setInterval(hikeScheduler,4*60*1000); //Make request in every 4 min
 // setInterval(buildPair,24*60*60*1000); //Make request in every 4 min
 
-setInterval(monitorPrices,1*60*60*1000); //Make request in every 2 hrs
+setInterval(monitorPrices,1.5*60*60*1000); //Make request in every 2 hrs
 setInterval(manageBoughtCoins, 60*1000); // 1 min
 setInterval(checkReboundCandidates, 15*60*1000);// 15 min
 
@@ -76,27 +76,27 @@ setInterval(checkReboundCandidates, 15*60*1000);// 15 min
 // }catch(err) {console.error(err);}
 // }
 
-//  function keepServerAlive() {
-//   //render will stop the server if no request is received in 15 min.
-//   try{
-//   let baseurl = 'https://requester-78cy.onrender.com/';
-//       fetch( baseurl )
-//       .then(response => {
-//           if (response.ok) {
-//             console.log(`URL ${baseurl} is reachable. Status Code: ${response.status}`);
-//           } else {
-//             console.error(`URL ${baseurl} returned an error. Status Code: ${response.status}`);
-//             if( !response.status.toString().includes('520')) {
-//             sendEmail(`${baseurl} have some Error. Status Code: ${response.status}`);
-//             }
-//           }
-//         })
-//         .catch(error => {
-//           console.error(`Error while checking URL ${baseurl}: ${error.message}`);
-//         });
-// }catch(error) {console.error(error);}
+ function keepServerAlive() {
+  //render will stop the server if no request is received in 15 min.
+  try{
+  let baseurl = 'https://requester-twha.onrender.com/';
+      fetch( baseurl )
+      .then(response => {
+          if (response.ok) {
+            console.log(`URL ${baseurl} is reachable. Status Code: ${response.status}`);
+          } else {
+            console.error(`URL ${baseurl} returned an error. Status Code: ${response.status}`);
+            if( !response.status.toString().includes('520')) {
+            sendEmail(`${baseurl} have some Error. Status Code: ${response.status}`);
+            }
+          }
+        })
+        .catch(error => {
+          console.error(`Error while checking URL ${baseurl}: ${error.message}`);
+        });
+}catch(error) {console.error(error);}
 
-//   }
+}
   
 
 // // Run the function every 4 hours
