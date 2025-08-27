@@ -162,8 +162,8 @@ export async function monitorPrices() {
 
 export async function checkReboundCandidates() {
     try {
-        const { data: latestData } = await axios.get(`${publicbaseurl}${ticker}`);
-
+        if (reboundWatchlist.length == 0) return;
+        const  latestData  = await fetchAllPrices()
         const now = Date.now();
 
         for (const market in reboundWatchlist) {
@@ -200,6 +200,7 @@ export async function checkReboundCandidates() {
 // ---- CHECK BOUGHT COINS (Take Profit / Stop Loss) ----
 export async function manageBoughtCoins() {
     try {
+        if (boughtCoins.length == 0) return;
         const prices = await fetchAllPrices();
 
         for (const coin of prices) {
