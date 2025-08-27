@@ -8,8 +8,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 let key= process.env.FIREBASE_CONFIG;
-console.log("key=");
-console.log(key);
+console.log("key");
+console.log(key)
 let firebaseConfig = JSON.parse(key);
 
 // Initialize Firebase
@@ -19,6 +19,7 @@ const MAX_COIN_HISTORY = 140;
 export function sendLogs(logMsg) {
     const currentDate = new Date();
     const dateKey = formatDateKey(currentDate);
+    console.log(`logMsg ${logMsg}`)
   
     const db = getDatabase();
     const logsRef = ref(db, `logs/${dateKey}`);

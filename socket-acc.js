@@ -16,18 +16,18 @@ const socket = io(socketEndpoint, {
 
 
 const body = { channel: "coindcx" };
-const payload = Buffer.from(JSON.stringify(body)).toString();
-const signature = crypto.createHmac('sha256', CONSTANT.secret).update(payload).digest('hex')
+// const payload = Buffer.from(JSON.stringify(body)).toString();
+// const signature = crypto.createHmac('sha256', CONSTANT.secret).update(payload).digest('hex')
 
-socket.on("connect", () => {
-  //Join channel  
-  console.log('wesocket connected');
-  socket.emit('join', {
-    'channelName': "coindcx",
-    'authSignature': signature,
-    'apiKey' : CONSTANT.key
-  });
-});
+// socket.on("connect", () => {
+//   //Join channel  
+//   console.log('wesocket connected');
+//   socket.emit('join', {
+//     'channelName': "coindcx",
+//     'authSignature': signature,
+//     'apiKey' : CONSTANT.key
+//   });
+// });
 
 
 
