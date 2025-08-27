@@ -31,5 +31,8 @@
       "fs/*"
     ]
   },
-  "description": ""
+  "description": "",
+  "engines": {
+    "node": "20.x"
+  }
 }
