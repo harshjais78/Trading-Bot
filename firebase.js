@@ -8,8 +8,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 let key= process.env.FIREBASE_CONFIG;
-console.log("key=");
-console.log(key);
+console.log("key");
+console.log(key)
 let firebaseConfig = JSON.parse(key);
 
 // Initialize Firebase
