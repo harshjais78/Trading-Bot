@@ -59,8 +59,8 @@ export async function monitorPrices() {
             const oldPrice = cachedPrices[market];
             const hikePercent = ((last_price - oldPrice) / oldPrice) * 100;
 
-            // Step 1: ≥12% hike → move to first list
-            if (hikePercent >= 12 && !phaseOneCandidates[market] && !boughtCoins[market]) {
+            // Step 1: ≥3.5% hike → move to first list
+            if (hikePercent >= 3.5 && !phaseOneCandidates[market] && !boughtCoins[market]) {
                 if (volumeHistory[market].length === 6) {
                     let valid = true;
                     for (let i = 1; i < volumeHistory[market].length; i++) {
@@ -78,20 +78,20 @@ export async function monitorPrices() {
                 }
 
                 phaseOneCandidates[market] = {
-                        basePrice: last_price,
+                        basePrice: oldPrice,
                         attempts: 0
                     };
                 sendLogs(`${prefix(market)} 🚀 ${market} jumped ${hikePercent.toFixed(2)}%. Added to phaseOneCandidates`);
             }
 
-            // Step 2: check for ≥5% hike from first list price (within 3 runs)
+            // Step 2: check for ≥3.5% hike from first list price (within 3 runs)
             if (phaseOneCandidates[market]) {
                 const candidate = phaseOneCandidates[market];
                 candidate.attempts++;
 
                 const secondHikePercent = ((last_price - candidate.basePrice) / candidate.basePrice) * 100;
 
-                if (secondHikePercent >= 5 && !phaseTwoAlerts[market]) {
+                if (secondHikePercent >= 15 && !phaseTwoAlerts[market]) {
                     phaseTwoAlerts[market] = {
                         entryPrice: last_price,
                         dropHistory: [last_price],
@@ -106,7 +106,6 @@ export async function monitorPrices() {
                     sendLogs(`${prefix(market)} ℹ️ Dropped ${market} from PhaseOne after 3 attempts without 5% hike`);
                 }
             }
-
 
             // Track red candle for phaseTwoAlerts
             if (phaseTwoAlerts[market] && !reboundWatchlist[market]) {
