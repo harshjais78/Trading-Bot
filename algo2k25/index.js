@@ -163,7 +163,7 @@ export async function monitorPrices() {
 export async function checkReboundCandidates() {
     try {
         if (reboundWatchlist.length == 0) return;
-        const { data: latestData } = await fetchAllPrices()
+        const  latestData  = await fetchAllPrices()
         const now = Date.now();
 
         for (const market in reboundWatchlist) {
