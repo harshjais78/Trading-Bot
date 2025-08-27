@@ -18,7 +18,7 @@ let canRunShortTerm = true;
 setInterval(keepServerAlive, 5*60*1000); //Make request in every 5 minutes
 // setInterval(hikeScheduler,4*60*1000); //Make request in every 4 min
 // setInterval(buildPair,24*60*60*1000); //Make request in every 4 min
-
+await monitorPrices();
 setInterval(monitorPrices,1.5*60*60*1000); //Make request in every 2 hrs
 setInterval(manageBoughtCoins, 60*1000); // 1 min
 setInterval(checkReboundCandidates, 15*60*1000);// 15 min
