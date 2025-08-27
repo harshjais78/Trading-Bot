@@ -161,8 +161,8 @@ export async function monitorPrices() {
 
 export async function checkReboundCandidates() {
     try {
-        if (reboundWatchlist.length == 0) return;
-        sendLogs(`reboundWatchlist: ${reboundWatchlist} ${reboundWatchlist.length}`)
+        if (Object.keys(reboundWatchlist).length === 0) return;
+        sendLogs(`reboundWatchlist: ${reboundWatchlist}`)
         const  latestData  = await fetchAllPrices()
         const now = Date.now();
 
@@ -200,8 +200,8 @@ export async function checkReboundCandidates() {
 // ---- CHECK BOUGHT COINS (Take Profit / Stop Loss) ----
 export async function manageBoughtCoins() {
     try {
-        if (boughtCoins.length == 0) return;
-        sendLogs(`boughtCoins: ${boughtCoins} ${boughtCoins.length}`)
+        if (Object.keys(boughtCoins).length === 0) return;
+        sendLogs(`boughtCoins: ${boughtCoins}`)
         const prices = await fetchAllPrices();
 
         for (const coin of prices) {
