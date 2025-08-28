@@ -8,8 +8,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 let key= process.env.FIREBASE_CONFIG;
-console.log("key");
-console.log(key)
 let firebaseConfig = JSON.parse(key);
 
 // Initialize Firebase
@@ -27,6 +25,23 @@ export function sendLogs(logMsg) {
     const newLogRef = push(logsRef);
 
     set(newLogRef, logMsg)
+        .catch((error) => {
+            console.error('Error storing log message:', error);
+        });
+  };
+
+  export function storeLog(prefix, message) {
+    const currentDate = new Date();
+    const dateKey = formatDateKey(currentDate);
+    console.log(`prefix: ${prefix} message ${message}`)
+    const data = {prefix, message}
+  
+    const db = getDatabase();
+    const logsRef = ref(db, `logs2/${dateKey}`);
+
+    const newLogRef = push(logsRef);
+
+    set(newLogRef, data)
         .catch((error) => {
             console.error('Error storing log message:', error);
         });
