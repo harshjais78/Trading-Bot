@@ -1,7 +1,7 @@
 import axios from "axios";
 import { baseurl, publicbaseurl, ticker, market_details } from "../Constant.js";
 import { sendEmail } from "../Email.js";
-import { sendLogs } from "../firebase.js";
+import { sendLogs, storeLog } from "../firebase.js";
 import { prefix } from "../hike.js";
 
 // Cache memory
@@ -14,7 +14,7 @@ let cooldowns = {};                    // { market: timestamp }
 let reboundWatchlist = {};             // { market: timestamp }
 
 // Cooldown settings
-const COOLDOWN_MS = 4 * 60 * 60 * 1000; // 4 hours
+const COOLDOWN_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 // Fetch all market prices
 async function fetchAllPrices() {
@@ -60,7 +60,7 @@ export async function monitorPrices() {
             const hikePercent = ((last_price - oldPrice) / oldPrice) * 100;
 
             // Step 1: ≥3.5% hike → move to first list
-            if (hikePercent >= 3.5 && !phaseOneCandidates[market] && !boughtCoins[market]) {
+            if (hikePercent >= 3.5 && !phaseOneCandidates[market] && !phaseTwoAlerts[market] && !boughtCoins[market] && !reboundWatchlist[market]) {
                 if (volumeHistory[market].length === 6) {
                     let valid = true;
                     for (let i = 1; i < volumeHistory[market].length; i++) {
@@ -92,11 +92,16 @@ export async function monitorPrices() {
                 const secondHikePercent = ((last_price - candidate.basePrice) / candidate.basePrice) * 100;
 
                 if (secondHikePercent >= 15 && !phaseTwoAlerts[market]) {
+                    let notes = `First pass price: ${candidate.basePrice}\nSecond pass price: ${last_price}`
+                    if (secondHikePercent > 75){
+                        notes = `\nHike of: ${secondHikePercent} looks a fluctuating coin`
+                    }
                     phaseTwoAlerts[market] = {
                         entryPrice: last_price,
                         dropHistory: [last_price],
                         lowestPrice: last_price,
-                        startTime: Date.now()
+                        startTime: Date.now(),
+                        notes: notes
                     };
                     sendLogs(`${prefix(market)} ⚡ ALERT: ${market} moved to PhaseTwo`);
                     delete phaseOneCandidates[market]; // cleanup
@@ -108,7 +113,7 @@ export async function monitorPrices() {
             }
 
             // Track red candle for phaseTwoAlerts
-            if (phaseTwoAlerts[market] && !reboundWatchlist[market]) {
+            if (phaseTwoAlerts[market] ) {
                 const entry = phaseTwoAlerts[market];
                 entry.dropHistory.push(last_price);
                 if (entry.dropHistory.length > 3) entry.dropHistory.shift();
@@ -127,23 +132,29 @@ export async function monitorPrices() {
                         if (consecutiveRedCandle >= 2 || foundConsecutiveRedCandle) {
                             foundConsecutiveRedCandle = true
                             if (totalDrop >= 5) {
-                                reboundWatchlist[market] = { market, startTime: Date.now() };
+                                let newNote = entry.notes
+                                newNote += `\ndropHistory prices: ${dropHistory}`
+
+                                reboundWatchlist[market] = { market, startTime: Date.now(), notes: newNote };
                                 delete phaseTwoAlerts[market];
                                 sendLogs(`${prefix(market)} 📉 ${market} moved to reboundWatchlist after 2 consecutive red candles`);
                                 break;
                             } else {
                                 if (Date.now() - entry.startTime > 1000 * 60 * 60 * 10) { // 10 hours
+                                    sendLogs(`${prefix(market)} 📉 ${market}: Waiting from 10hrs. No rebound. Dropping coin`);
                                     delete phaseTwoAlerts[market]
                                 }
                             }
                         } else {
                             if (Date.now() - entry.startTime > 1000 * 60 * 60 * 10) { // 10 hours
+                                sendLogs(`${prefix(market)} 📉 ${market}:: Waiting from 10hrs. No rebound. Dropping coin`);
                                 delete phaseTwoAlerts[market]
                             }
                         }
                     } else {
                         consecutiveRedCandle = 0; // reset if not a red candle
                         if (Date.now() - entry.startTime > 1000 * 60 * 60 * 10) { // 10 hours
+                            sendLogs(`${prefix(market)} 📉 ${market}::: Waiting from 10hrs. No rebound. Dropping coin`);
                             delete phaseTwoAlerts[market]
                         }
                     }
@@ -161,7 +172,7 @@ export async function monitorPrices() {
 export async function checkReboundCandidates() {
     try {
         if (Object.keys(reboundWatchlist).length === 0) return;
-        sendLogs(`reboundWatchlist: ${JSON.stringify(reboundWatchlist)}`)
+        sendLogs(`${prefix(market)} reboundWatchlist: ${JSON.stringify(reboundWatchlist)}`)
         const  latestData  = await fetchAllPrices()
         const now = Date.now();
 
@@ -179,7 +190,9 @@ export async function checkReboundCandidates() {
             const reboundPercent = ((last_price - alert.lowestPrice) / alert.lowestPrice) * 100;
             if (reboundPercent >= 1) {
                 sendLogs(`${prefix(market)} 📈 Rebound detected for ${market}, buying at ${last_price}`);
-                buyCoin(market, last_price);
+                let updatedNotes = alert.notes
+                updatedNotes += `\nRebound percent: ${reboundPercent}, rebound price: ${last_price} from ${alert.lowestPrice}`
+                buyCoin(market, last_price, updatedNotes);
                 delete reboundWatchlist[market];
                 continue;
             }
@@ -200,7 +213,7 @@ export async function checkReboundCandidates() {
 export async function manageBoughtCoins() {
     try {
         if (Object.keys(boughtCoins).length === 0) return;
-        sendLogs(`boughtCoins: ${JSON.stringify(boughtCoins)}`)
+        sendLogs(`${prefix(market)} boughtCoins: ${JSON.stringify(boughtCoins)}`)
         const prices = await fetchAllPrices();
 
         for (const coin of prices) {
@@ -235,9 +248,9 @@ export async function manageBoughtCoins() {
 }
 
 // ---- MOCK BUY/SELL ----
-function buyCoin(market, price) {
-    sendEmail(`🟢 BUY ${market} at ${price}`)
-    sendLogs(`${prefix(market)} 🟢 BUY ${market} at ${price}`);
+function buyCoin(market, price, notes) {
+    sendEmail(`🟢 BUY ${market} at ${price}\nNotes: ${notes}`)
+    sendLogs(`${prefix(market)} 🟢 BUY ${market} at ${price}\nNotes: ${notes}`);
     boughtCoins[market] = { buyPrice: price, priceHistory: [price] };
     cooldowns[market] = Date.now(); // set cooldown
 }

@@ -18,10 +18,36 @@ let canRunShortTerm = true;
 setInterval(keepServerAlive, 5*60*1000); //Make request in every 5 minutes
 // setInterval(hikeScheduler,4*60*1000); //Make request in every 4 min
 // setInterval(buildPair,24*60*60*1000); //Make request in every 4 min
-await monitorPrices();
-setInterval(monitorPrices,1.5*60*60*1000); //Make request in every 2 hrs
-setInterval(manageBoughtCoins, 60*1000); // 1 min
-setInterval(checkReboundCandidates, 15*60*1000);// 15 min
+
+// await monitorPrices();
+// setInterval(monitorPrices,1.5*60*60*1000); //Make request in every 2 hrs
+// setInterval(manageBoughtCoins, 60*1000); // 1 min
+// setInterval(checkReboundCandidates, 15*60*1000);// 15 min
+
+matchTimeAndStart();
+
+async function matchTimeAndStart() {
+    const date = new Date();
+    date.setHours(date.getHours() + 5); // Add 5 hours for UTC+5
+    date.setMinutes(date.getMinutes() + 30); // Add 30 minutes for UTC+5:30
+  
+    const min = String(date.getUTCMinutes()).padStart(2, '0');
+
+    if(min >= 40){
+        await sleep((60 - min - 1) * 1000 * 60);
+        await monitorPrices();
+        setInterval(monitorPrices,2*60*60*1000); //Make request in every 2 hrs
+        setInterval(manageBoughtCoins, 60*1000); // 1 min
+        setInterval(checkReboundCandidates, 25*60*1000);// 25 min
+    }else{
+        await monitorPrices();
+        await sleep((60 - min - 1) * 1000 * 60) // Make sure to handle checkReboundCandidates & manageBoughtCoins on db edit
+        await monitorPrices();
+        setInterval(monitorPrices, 2*60*60*1000); //Make request in every 2 hrs
+        setInterval(manageBoughtCoins, 60*1000); // 1 min
+        setInterval(checkReboundCandidates, 25*60*1000);// 25 min
+    }
+}
 
 // let ticker5minAgo;
 // let ticker10minAgo;
