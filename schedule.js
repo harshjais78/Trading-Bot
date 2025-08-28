@@ -27,11 +27,18 @@ setInterval(keepServerAlive, 5*60*1000); //Make request in every 5 minutes
 matchTimeAndStart();
 
 async function matchTimeAndStart() {
-    const date = new Date();
-    date.setHours(date.getHours() + 5); // Add 5 hours for UTC+5
-    date.setMinutes(date.getMinutes() + 30); // Add 30 minutes for UTC+5:30
-  
-    const min = String(date.getUTCMinutes()).padStart(2, '0');
+    const now = new Date();
+
+    // Convert to IST (UTC+5:30)
+    const istOffset = 5 * 60 + 30; // in minutes
+    const utcOffset = now.getTimezoneOffset(); // in minutes (local - UTC)
+    const istDate = new Date(now.getTime() + (istOffset + utcOffset) * 60 * 1000);
+
+    const min = istDate.getMinutes();
+    const sec = istDate.getSeconds();
+
+    console.log(`🕒 Current IST time: ${istDate.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}`);
+
 
     if(min >= 40){
         await sleep((60 - min - 1) * 1000 * 60);
