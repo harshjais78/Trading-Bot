@@ -32,7 +32,7 @@ async function matchTimeAndStart() {
     // Convert to IST (UTC+5:30)
     const istOffset = 5 * 60 + 30; // in minutes
     const utcOffset = now.getTimezoneOffset(); // in minutes (local - UTC)
-    const istDate = new Date(now.getTime() + (istOffset + utcOffset) * 60 * 1000);
+    const istDate = new Date(now.getTime() + (istOffset - utcOffset) * 60 * 1000);
 
     const min = istDate.getMinutes();
     const sec = istDate.getSeconds();
