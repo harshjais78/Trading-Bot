@@ -61,7 +61,8 @@ export async function monitorPrices() {
 
             // Step 1: ≥3.5% hike → move to first list
             if (hikePercent >= 3.5 && !phaseOneCandidates[market] && !phaseTwoAlerts[market] && !boughtCoins[market] && !reboundWatchlist[market]) {
-                if (volumeHistory[market].length === 6) {
+                let notes = ""
+                if (volumeHistory[market].length === 3) {
                     let valid = true;
                     for (let i = 1; i < volumeHistory[market].length; i++) {
                         if (volumeHistory[market][i] === volumeHistory[market][i - 1]) {
@@ -74,11 +75,13 @@ export async function monitorPrices() {
                         continue;
                     }
                 } else {
-                    continue; // Not enough history yet
+                    notes = `Volume check is skipped due to less/no data`
+                    // continue; // Not enough history yet
                 }
 
                 phaseOneCandidates[market] = {
                         basePrice: oldPrice,
+                        notes,
                         attempts: 0
                     };
                 sendLogs(`${prefix(market)} 🚀 ${market} jumped ${hikePercent.toFixed(2)}%. Added to phaseOneCandidates`);
@@ -92,7 +95,7 @@ export async function monitorPrices() {
                 const secondHikePercent = ((last_price - candidate.basePrice) / candidate.basePrice) * 100;
 
                 if (secondHikePercent >= 15 && !phaseTwoAlerts[market]) {
-                    let notes = `First pass price: ${candidate.basePrice}\nSecond pass price: ${last_price}`
+                    let notes = `${candidate.notes}\nFirst pass price: ${candidate.basePrice}\nSecond pass price: ${last_price}`
                     if (secondHikePercent > 75){
                         notes = `\nHike of: ${secondHikePercent} looks a fluctuating coin`
                     }
@@ -133,7 +136,7 @@ export async function monitorPrices() {
                             foundConsecutiveRedCandle = true
                             if (totalDrop >= 5) {
                                 let newNote = entry.notes
-                                newNote += `\ndropHistory prices: ${dropHistory}`
+                                newNote += `\ndropHistory prices: ${entry.dropHistory}`
 
                                 reboundWatchlist[market] = { market, startTime: Date.now(), notes: newNote };
                                 delete phaseTwoAlerts[market];
