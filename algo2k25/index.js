@@ -95,6 +95,7 @@ export async function monitorPrices() {
                 const secondHikePercent = ((last_price - candidate.basePrice) / candidate.basePrice) * 100;
 
                 if (secondHikePercent >= 15 ) {
+
                     let notes = `${candidate.notes}\nFirst pass price: ${candidate.basePrice}\nSecond pass price: ${last_price}`
                     if (secondHikePercent > 75){
                         notes = `\nHike of: ${secondHikePercent} looks a fluctuating coin`
