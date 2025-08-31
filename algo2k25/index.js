@@ -94,7 +94,7 @@ export async function monitorPrices() {
 
                 const secondHikePercent = ((last_price - candidate.basePrice) / candidate.basePrice) * 100;
 
-                if (secondHikePercent >= 15 && !phaseTwoAlerts[market]) {
+                if (secondHikePercent >= 15 ) {
                     let notes = `${candidate.notes}\nFirst pass price: ${candidate.basePrice}\nSecond pass price: ${last_price}`
                     if (secondHikePercent > 75){
                         notes = `\nHike of: ${secondHikePercent} looks a fluctuating coin`
@@ -111,7 +111,7 @@ export async function monitorPrices() {
                 } else if (candidate.attempts >= 3) {
                     // If 3 chances are done and no 5% hike → drop it
                     delete phaseOneCandidates[market];
-                    sendLogs(`${prefix(market)} ℹ️ Dropped ${market} from PhaseOne after 3 attempts without 5% hike`);
+                    sendLogs(`${prefix(market)} ℹ️ Dropped ${market} from PhaseOne after 3 attempts without 15% hike`);
                 }
             }
 
@@ -124,6 +124,7 @@ export async function monitorPrices() {
                 let consecutiveRedCandle = 0;
                 let totalDrop = 0;
                 let foundConsecutiveRedCandle = false
+                sendLogs(`${prefix(market)} ${market} dropHistory: ${entry.dropHistory}`)
                 for (let i = 1; i < entry.dropHistory.length; i++) {
                     const prev = entry.dropHistory[i - 1];
                     const curr = entry.dropHistory[i];
@@ -150,14 +151,14 @@ export async function monitorPrices() {
                             }
                         } else {
                             if (Date.now() - entry.startTime > 1000 * 60 * 60 * 10) { // 10 hours
-                                sendLogs(`${prefix(market)} 📉 ${market}:: Waiting from 10hrs. No rebound. Dropping coin`);
+                                sendLogs(`${prefix(market)} 📉 ${market}: Waiting from 10hrs. No rebound. Dropping coin`);
                                 delete phaseTwoAlerts[market]
                             }
                         }
                     } else {
                         consecutiveRedCandle = 0; // reset if not a red candle
                         if (Date.now() - entry.startTime > 1000 * 60 * 60 * 10) { // 10 hours
-                            sendLogs(`${prefix(market)} 📉 ${market}::: Waiting from 10hrs. No rebound. Dropping coin`);
+                            sendLogs(`${prefix(market)} 📉 ${market}: Waiting from 10hrs. No rebound. Dropping coin`);
                             delete phaseTwoAlerts[market]
                         }
                     }
