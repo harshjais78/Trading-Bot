@@ -177,7 +177,7 @@ export async function monitorPrices() {
 export async function checkReboundCandidates() {
     try {
         if (Object.keys(reboundWatchlist).length === 0) return;
-        sendLogs(`${prefix(market)} reboundWatchlist: ${JSON.stringify(reboundWatchlist)}`)
+        sendLogs(`${prefix("market")} reboundWatchlist: ${JSON.stringify(reboundWatchlist)}`)
         const  latestData  = await fetchAllPrices()
         const now = Date.now();
 
@@ -218,7 +218,7 @@ export async function checkReboundCandidates() {
 export async function manageBoughtCoins() {
     try {
         if (Object.keys(boughtCoins).length === 0) return;
-        sendLogs(`${prefix(market)} boughtCoins: ${JSON.stringify(boughtCoins)}`)
+        sendLogs(`${prefix("boughtCoins")} boughtCoins: ${JSON.stringify(boughtCoins)}`)
         const prices = await fetchAllPrices();
 
         for (const coin of prices) {
