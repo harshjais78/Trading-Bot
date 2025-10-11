@@ -7,7 +7,7 @@ import { prefix, getNowDate, getTime } from "../hike.js";
 // Cache memory
 let cachedPrices = {};                 // { "B-BTC_USDT": 24000 }
 let phaseOneCandidates = {};           // { "B-BTC_USDT": 26000 }
-let phaseTwoAlerts = {};               // { "B-BTC_USDT": { entryPrice, dropHistory } }
+let phaseTwoCandidate = {};               // { "B-BTC_USDT": { entryPrice, dropHistory } }
 let boughtCoins = {};                  // { market: { buyPrice: number, priceHistory: number[] } }
 let volumeHistory = {};                // { market: [volumes...] }
 let cooldowns = {};                    // { market: timestamp }
@@ -30,7 +30,10 @@ async function fetchAllPrices() {
 // Check if market is on cooldown
 function isOnCooldown(market) {
     if (!cooldowns[market]) return false;
-    return getNowDate() - cooldowns[market] < COOLDOWN_MS;
+    if( getNowDate() - cooldowns[market] < COOLDOWN_MS)
+        return true;
+    delete cooldowns[market]
+    return false;
 }
 
 // Main monitor function
@@ -62,27 +65,24 @@ export async function monitorPrices() {
             const hikePercent = ((last_price - oldPrice) / oldPrice) * 100;
 
             // Step 1: ≥3.5% hike → move to first list
-            if (hikePercent >= 3.5 && !phaseOneCandidates[market] && !phaseTwoAlerts[market] && !boughtCoins[market] && !reboundWatchlist[market]) {
+            if (hikePercent >= 3.5 && !phaseOneCandidates[market] && !phaseTwoCandidate[market] && !boughtCoins[market] && !reboundWatchlist[market]) {
                 clearNote(market)
-                if (volumeHistory[market].length === 3) {
-                    let valid = true;
-                    for (let i = 1; i < volumeHistory[market].length; i++) {
-                        if (volumeHistory[market][i] === volumeHistory[market][i - 1]) {
-                            valid = false; // means no trades happened in that hour
-                            break;
-                        }
+                let valid = true;
+                for (let i = 1; i < volumeHistory[market].length; i++) {
+                    if (volumeHistory[market][i] === volumeHistory[market][i - 1]) {
+                        valid = false; // means no trades happened in that hour
+                        break;
                     }
-
-                    if (!valid) {
-                        continue;
-                    }
-                } else {
-                    logAndNote(market, `Volume check is skipped due to less/no data`)
-                    // continue; // Not enough history yet
                 }
 
+                if (!valid) {
+                    logAndNote(market, `Volume check is skipped due to less/no data`)
+                    // continue;
+                }
+
+                logAndNote(market, `First pass from: ${oldPrice} to: ${last_price} at ${getTime()}`)
                 phaseOneCandidates[market] = {
-                        basePrice: oldPrice,
+                        basePrice: last_price,
                         attempts: 0,
                         time : getTime()
                     };
@@ -94,15 +94,14 @@ export async function monitorPrices() {
                 const candidate = phaseOneCandidates[market];
                 candidate.attempts++;
 
-                const secondHikePercent = ((last_price - candidate.basePrice) / candidate.basePrice) * 100;
+                const secondHikePercent = ((last_price - candidate.basePrice) / candidate.basePrice) * 100; // Will be 0 in same run when entered in phaseOneCandidates
 
                 if (secondHikePercent >= 15 ) {
-
-                    logAndNote(market, `First pass price: ${candidate.basePrice} at ${candidate.time}\nSecond pass price: ${last_price} at ${getTime()}`)
+                    logAndNote(market, `Second pass from: ${candidate.basePrice} to: ${last_price} at ${getTime()}`)
                     if (secondHikePercent > 75){
                         logAndNote(market, `Hike of: ${secondHikePercent} looks a fluctuating coin`)
                     }
-                    phaseTwoAlerts[market] = {
+                    phaseTwoCandidate[market] = {
                         entryPrice: last_price,
                         dropHistory: [[last_price, getTime()]],
                         lowestPrice: last_price,
@@ -111,66 +110,65 @@ export async function monitorPrices() {
                     sendLogs(`${prefix(market)} ⚡ ALERT: ${market} moved to PhaseTwo`);
                     delete phaseOneCandidates[market]; // cleanup
                 } else if (candidate.attempts >= 3) {
-                    // If 3 chances are done and no 5% hike → drop it
+                    // If fail to increase by 15% in 3 run → drop it
                     delete phaseOneCandidates[market];
                     sendLogs(`${prefix(market)} ℹ️ Dropped ${market} from PhaseOne after 3 attempts without 15% hike`);
                 }
             }
 
-            // Track red candle for phaseTwoAlerts
-            if (phaseTwoAlerts[market] ) {
-                const entry = phaseTwoAlerts[market];
+            // Step 3: Track red candle for phaseTwoAlerts
+            if (phaseTwoCandidate[market] ) {
+                const entry = phaseTwoCandidate[market];
                 entry.dropHistory.push([last_price, getTime()]);
                 if (entry.dropHistory.length > 10) entry.dropHistory.shift();
 
                 let consecutiveRedCandle = 0;
-                let totalDrop = 0;
                 let foundConsecutiveRedCandle = false
-
+                const enteredPrice = entry.dropHistory[0][0]
                 for (let i = 1; i < entry.dropHistory.length; i++) {
                     const prev = entry.dropHistory[i - 1][0]; // last_price
                     const curr = entry.dropHistory[i][0]; // last_price
                     const dropPercent = ((prev - curr) / prev) * 100.0;
+                    const startToNowDrop = ((enteredPrice - last_price) / enteredPrice) * 100.0;
 
                     if (dropPercent > 0) {
                         consecutiveRedCandle++;
-                        totalDrop += dropPercent
                         if (consecutiveRedCandle >= 2 || foundConsecutiveRedCandle) {
                             foundConsecutiveRedCandle = true
-                            if (totalDrop >= 5) {
+                            if (startToNowDrop >= 5.5) {
 
                                 const formattedHistory = entry.dropHistory
                                         .map(([price, time]) => `${price} @ ${time}`)
                                         .join("  → "); 
-                                logAndNote(market, ` dropHistory: ${formattedHistory}\nRed candle: Ok at ${getTime()} @ ${last_price} (curr: ${curr}) with drop percent: ${dropPercent}`)
+                                logAndNote(market, ` dropHistory: ${formattedHistory}\nFound >=2 Red candle at: ${getTime()} @ ${last_price} (curr: ${curr}) with drop percent: ${startToNowDrop}`)
 
                                 reboundWatchlist[market] = { market, startTime: getNowDate(), lowestPrice: last_price };
-                                delete phaseTwoAlerts[market];
+                                delete phaseTwoCandidate[market];
                                 sendLogs(`${prefix(market)} 📉 ${market} moved to reboundWatchlist after 2 consecutive red candles`);
                                 startReboundScheduler(market);
                                 break;
                             } else {
                                 if (getNowDate() - entry.startTime > 1000 * 60 * 60 * 10) { // 10 hours
-                                    sendLogs(`${prefix(market)} 📉 ${market}: Waiting from 10hrs. No rebound. Dropping coin`);
-                                    delete phaseTwoAlerts[market]
+                                    sendLogs(`${prefix(market)} 📉 ${market}: Waiting from 10hrs. Total red candle sum < 5%. Dropping coin`);
+                                    delete phaseTwoCandidate[market]
                                 }
                             }
                         } else {
                             if (getNowDate() - entry.startTime > 1000 * 60 * 60 * 10) { // 10 hours
-                                sendLogs(`${prefix(market)} 📉 ${market}: Waiting from 10hrs. No rebound. Dropping coin`);
-                                delete phaseTwoAlerts[market]
+                                sendLogs(`${prefix(market)} 📉 ${market}: Waiting from 10hrs. Total red candle sum < 5%. Dropping coin`);
+                                delete phaseTwoCandidate[market]
                             }
                         }
                     } else {
                         consecutiveRedCandle = 0; // reset if not a red candle
                         if (getNowDate() - entry.startTime > 1000 * 60 * 60 * 10) { // 10 hours
-                            sendLogs(`${prefix(market)} 📉 ${market}: Waiting from 10hrs. No rebound. Dropping coin`);
-                            delete phaseTwoAlerts[market]
+                            sendLogs(`${prefix(market)} 📉 ${market}: Waiting from 10hrs. Total red candle sum < 5%. Dropping coin`);
+                            delete phaseTwoCandidate[market]
                         }
 
                         if(dropPercent <= -4.5){ // Price increased by >= 4.5%
                             sendLogs(`${prefix(market)} 📉 ${market}:Price increased by ${-dropPercent} while waiting for 2 consecutive red candle`);
-                            delete phaseTwoAlerts[market]
+                            delete phaseTwoCandidate[market]
                         }
                     }
                 }
@@ -234,7 +232,7 @@ async function checkReboundCandidates(market) {
                                         .map(([price, time]) => `${price} @ ${time}`)
                                         .join("  → "); 
             logAndNote(market, `ReboundHistory: ${reboundHistoryText}`)
-            if(reboundPercentThreshold > 4)
+            if(reboundPercent > 4)
                 logAndNote(market, "Not safe to buy. Rebound Percent is more than 4%")
             buyCoin(market, last_price);
 
