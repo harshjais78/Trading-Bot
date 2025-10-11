@@ -80,7 +80,7 @@ export async function monitorPrices() {
                     // continue;
                 }
 
-                logAndNote(market, `First pass from: ${oldPrice} to: ${last_price} at ${getTime()}`)
+                logAndNote(market, `First pass from: ${oldPrice} to: ${last_price} at ${getTime()} (${hikePercent})`)
                 phaseOneCandidates[market] = {
                         basePrice: last_price,
                         attempts: 0,
@@ -97,7 +97,7 @@ export async function monitorPrices() {
                 const secondHikePercent = ((last_price - candidate.basePrice) / candidate.basePrice) * 100; // Will be 0 in same run when entered in phaseOneCandidates
 
                 if (secondHikePercent >= 15 ) {
-                    logAndNote(market, `Second pass from: ${candidate.basePrice} to: ${last_price} at ${getTime()}`)
+                    logAndNote(market, `Second pass from: ${candidate.basePrice} to: ${last_price} at ${getTime()} (${secondHikePercent})`)
                     if (secondHikePercent > 75){
                         logAndNote(market, `Hike of: ${secondHikePercent} looks a fluctuating coin`)
                     }
