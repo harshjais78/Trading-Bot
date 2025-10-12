@@ -82,6 +82,7 @@ export async function monitorPrices() {
 
                 logAndNote(market, `First pass from: ${oldPrice} to: ${last_price} at ${getTime()} (${hikePercent})`)
                 phaseOneCandidates[market] = {
+                        startPrice: oldPrice,
                         basePrice: last_price,
                         attempts: 0,
                         time : getTime()
@@ -102,9 +103,9 @@ export async function monitorPrices() {
                         logAndNote(market, `Hike of: ${secondHikePercent} looks a fluctuating coin`)
                     }
                     phaseTwoCandidate[market] = {
-                        entryPrice: last_price,
-                        dropHistory: [[last_price, getTime()]],
-                        lowestPrice: last_price,
+                        basePrice: candidate.startPrice,
+                        topPrice: last_price,
+                        dropHistory: [],
                         startTime: getNowDate(),
                     };
                     sendLogs(`${prefix(market)} ⚡ ALERT: ${market} moved to PhaseTwo`);
@@ -136,17 +137,22 @@ export async function monitorPrices() {
                         if (consecutiveRedCandle >= 2 || foundConsecutiveRedCandle) {
                             foundConsecutiveRedCandle = true
                             if (startToNowDrop >= 5.5) {
+                                let maxDropAllowed = entry.topPrice - ( 0.7 *(entry.topPrice - entry.basePrice)) // 70% of base to highest price diff -> max allowed drop 
+                                if(last_price >= maxDropAllowed){
+                                    const formattedHistory = entry.dropHistory
+                                            .map(([price, time]) => `${price} @ ${time}`)
+                                            .join("  → "); 
+                                    logAndNote(market, ` dropHistory: ${formattedHistory}\nFound >=2 Red candle at: ${getTime()} @ ${last_price} (curr: ${curr}) with drop percent: ${startToNowDrop}`)
 
-                                const formattedHistory = entry.dropHistory
-                                        .map(([price, time]) => `${price} @ ${time}`)
-                                        .join("  → "); 
-                                logAndNote(market, ` dropHistory: ${formattedHistory}\nFound >=2 Red candle at: ${getTime()} @ ${last_price} (curr: ${curr}) with drop percent: ${startToNowDrop}`)
-
-                                reboundWatchlist[market] = { market, startTime: getNowDate(), lowestPrice: last_price };
-                                delete phaseTwoCandidate[market];
-                                sendLogs(`${prefix(market)} 📉 ${market} moved to reboundWatchlist after 2 consecutive red candles`);
-                                startReboundScheduler(market);
-                                break;
+                                    reboundWatchlist[market] = { market, startTime: getNowDate(), lowestPrice: last_price };
+                                    delete phaseTwoCandidate[market];
+                                    sendLogs(`${prefix(market)} 📉 ${market} moved to reboundWatchlist after 2 consecutive red candles`);
+                                    startReboundScheduler(market);
+                                    break;
+                                }else{
+                                     sendLogs(`${prefix(market)} 📉 ${market}: Coin has dropped too much. Current Price: ${last_price} -> maxDropAllowed: ${maxDropAllowed}`);
+                                    delete phaseTwoCandidate[market]
+                                }
                             } else {
                                 if (getNowDate() - entry.startTime > 1000 * 60 * 60 * 10) { // 10 hours
                                     sendLogs(`${prefix(market)} 📉 ${market}: Waiting from 10hrs. Total red candle sum < 5%. Dropping coin`);
@@ -187,7 +193,7 @@ async function startReboundScheduler(market){
         if (reboundScheduler[market]) return; // already running
         reboundScheduler[market] = setInterval(checkReboundCandidates, 25*60*1000, market);// 25 min
     } catch (err) {
-        console.error("Error in 15-min scheduler:", err);
+        console.error("Error in 25-min scheduler:", err);
     }
 }
 
