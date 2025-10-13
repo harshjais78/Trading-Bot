@@ -172,7 +172,7 @@ export async function monitorPrices() {
                             delete phaseTwoCandidate[market]
                         }
 
-                        if(dropPercent <= -4.5){ // Price increased by >= 4.5%
+                        if(dropPercent <= -4.5 && foundConsecutiveRedCandle){ // Price increased by >= 4.5%
                             sendLogs(`${prefix(market)} 📉 ${market}:Price increased by ${-dropPercent} while waiting for 2 consecutive red candle`);
                             delete phaseTwoCandidate[market]
                         }
