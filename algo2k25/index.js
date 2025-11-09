@@ -53,7 +53,7 @@ export async function monitorPrices() {
             // ---- Track Volume History (last 6 hrs) ----
             if (!volumeHistory[market]) volumeHistory[market] = [];
             volumeHistory[market].push(coinData.volume || 0);
-            if (volumeHistory[market].length > 6) volumeHistory[market].shift();
+            if (volumeHistory[market].length > 10) volumeHistory[market].shift();
 
             // First run: just store price
             if (!cachedPrices[market]) {
@@ -69,7 +69,7 @@ export async function monitorPrices() {
                 clearNote(market)
                 let valid = true;
                 for (let i = 1; i < volumeHistory[market].length; i++) {
-                    if (volumeHistory[market][i] === volumeHistory[market][i - 1]) {
+                    if (volumeHistory[market][i] == 0.0) {
                         valid = false; // means no trades happened in that hour
                         break;
                     }
@@ -219,6 +219,7 @@ async function checkReboundCandidates(market) {
         const  latestData  = await fetchAllPrices()
         const now = getNowDate();
         let reboundPercentThreshold = 1.3
+        let maxReboundAllowed = 6.0
 
         const alert = reboundWatchlist[market];
         const coinData = latestData.find(c => c.market === market);
@@ -248,7 +249,7 @@ async function checkReboundCandidates(market) {
                                         .map(([price, time]) => `${price} @ ${time}`)
                                         .join("  → "); 
             logAndNote(market, `ReboundHistory: ${reboundHistoryText}`)
-            if(reboundPercent > 4)
+            if(reboundPercent > maxReboundAllowed)
                 logAndNote(market, "Not safe to buy. Rebound Percent is more than 4%")
             buyCoin(market, last_price);
 
@@ -283,16 +284,37 @@ export async function manageBoughtCoins() {
         for (const coin of prices) {
             const { market, last_price } = coin;
             if (!boughtCoins[market]) continue;
-            let profitPercentThreshold = 3.5;
-            let lossPercentThreshold = 10;
+            let profitPercentThreshold = 6;
+            let lossPercentThreshold = 8;
             let { buyPrice, priceHistory } = boughtCoins[market];
 
             priceHistory.push(last_price);
-            if (priceHistory.length > 3) priceHistory.shift();
+            if (priceHistory.length > 15) priceHistory.shift();
             boughtCoins[market].priceHistory = priceHistory;
 
+            let maxPriceReached = last_price
+            for(let idx = 0; idx<priceHistory.length; idx++){
+                let lossAtPoint = ((buyPrice - priceHistory[idx])/buyPrice) * 100.0;
+                if( lossAtPoint >= 3.0) // if loss is more than 3% at any point, resest profitPercentThreshold --> recovered from loss, confiedence dropped
+                    profitPercentThreshold = 2;
+                maxPriceReached = Math.max(maxPriceReached, priceHistory[idx])
+            }
+
+            let lowestPriceReached = last_price;
+            let startCheck = false;
+            for(let idx = 0; idx<priceHistory.length; idx++){
+                if(priceHistory[idx] == maxPriceReached){
+                    startCheck = true;
+                }
+
+                if(startCheck && priceHistory[idx] >= buyPrice){
+                    lowestPriceReached = Math.min(lowestPriceReached, priceHistory[idx]) // lowest price still greater than bought price --> close to reach profit threshold, but couldn't
+                }
+            }
+
             const profitPercent = ((last_price - buyPrice) / buyPrice) * 100;
-            if( getNowDate() - boughtCoins[market].boughtDate > 6 * 60 * 60 * 1000) { // 6 hrs
+            if( getNowDate() - boughtCoins[market].boughtDate > 6 * 60 * 60 * 1000 ||   // --> 6 hrs
+                ((maxPriceReached - lowestPriceReached)/lowestPriceReached)*100 >= 1.5) { // if price decreased by 1.5% from max reached but less than profitPercentThreshold
                 profitPercentThreshold = 0;
             }
 
@@ -306,7 +328,7 @@ export async function manageBoughtCoins() {
             const lossPercent = (( boughtCoins[market].buyPrice - last_price) /  boughtCoins[market].buyPrice) * 100;
             
             if(getNowDate() - boughtCoins[market].boughtDate >= 4 * 60 * 60 * 1000){
-                lossPercentThreshold -= (getNowDate() - boughtCoins[market].boughtDate) /(5 * 60 * 60 * 1000) // Decrease bearing capacity by 1% with every 5 hrs
+                lossPercentThreshold -= (getNowDate() - boughtCoins[market].boughtDate) /(2 * 60 * 60 * 1000) // Decrease loss bearing capacity by 1% with every 1.5 hrs
                 lossPercentThreshold = Math.max(0, lossPercentThreshold);
             }
 
